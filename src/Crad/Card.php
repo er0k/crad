@@ -17,38 +17,8 @@ class Card
     private $name;
 
     /** @var array */
-    private $tracksData;
+    private $tracks;
 
-    const T1_PATTERN = "^%B([^\^\W]{0,19})\^([^\^]{2,26})\^(\d{4})(\w{3})[^?]+\?\w?$";
-    
-    const T2_PATTERN = "^;([^=]{0,19})=(\d{4})(\w{3})[^?]+\?\w?$";
-
-
-    /**
-     * @param string $input
-     * @throws Exception 
-     * @return Card
-     */
-    public function readInput($input)
-    {
-        foreach ([1,2] as $trackNum) {
-            if (
-                ($data = $this->isTrack($trackNum, $input)) 
-                && !$this->hasAllTracks()
-            ) {
-                $this->addTrackData($trackNum, $data);
-                $input = '';
-            }
-        }
-
-        $this->parseTrackData();
-
-        if (!empty($input)) {
-            $this->parseExtraInput($input);
-        }
-
-        return $this;
-    }
 
     /**
      * @return Card
@@ -108,12 +78,12 @@ class Card
             return $this->number;
         }
 
-        if (isset($this->tracksData[1])) {
-            return $this->tracksData[1][1];
+        if (isset($this->tracks[1])) {
+            return $this->tracks[1][1];
         }
 
-        if (isset($this->tracksData[2])) {
-            return $this->tracksData[2][1];
+        if (isset($this->tracks[2])) {
+            return $this->tracks[2][1];
         }
     }
 
@@ -136,12 +106,12 @@ class Card
             return $this->date;
         }
 
-        if (isset($this->tracksData[1])) {
-            return $this->tracksData[1][3];
+        if (isset($this->tracks[1])) {
+            return $this->tracks[1][3];
         }
 
-        if (isset($this->tracksData[2])) {
-            return $this->tracksData[2][2];
+        if (isset($this->tracks[2])) {
+            return $this->tracks[2][2];
         }
     }
 
@@ -164,8 +134,8 @@ class Card
             return $this->name;
         }
 
-        if (isset($this->tracksData[1])) {
-            return $this->tracksData[1][2];
+        if (isset($this->tracks[1])) {
+            return $this->tracks[1][2];
         }
     }
 
@@ -188,18 +158,20 @@ class Card
     }
 
     /**
-     * @param  string $input
-     * @return Card
+     * @return array
      */
-    private function parseExtraInput($input)
+    public function getTracks()
     {
-        $input = trim($input);
+        return $this->tracks;
+    }
 
-        if (strlen($input) == 3 && is_numeric($input)) {
-            $this->setCvv($input);
-        }
-
-        return $this;
+    /**
+     * @param int $num
+     * @param string $track
+     */
+    public function setTrack($num, $track)
+    {
+        $this->tracks[$num] = $track;
     }
 
     /**
@@ -232,78 +204,5 @@ class Card
     private function hasName()
     {
         return !is_null($this->name);
-    }
-
-    /**
-     * @return bool
-     */
-    private function hasAllTracks()
-    {
-        if (count($this->tracksData) == 2) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @param int $num
-     * @param array $data
-     */
-    private function addTrackData($num, $data)
-    {
-        if ($this->hasAllTracks()) {
-            throw new Exception("Tracks full");
-        }
-
-        $this->tracksData[$num] = $data;
-    }
-
-    /**
-     * @param  int $num
-     * @param  string $track
-     * @return false | array
-     */
-    private function isTrack($num, $track)
-    {
-        switch ($num) {
-            case 1: $pattern = self::T1_PATTERN; break;
-            case 2: $pattern = self::T2_PATTERN; break;
-            default: 
-                throw new Exception("Only two tracks are supported");
-        }
-
-        if (!$data = $this->isMatch($track, $pattern)) {
-            return false;
-        }
-
-        return $data;
-    }
-
-    /**
-     * @return Card
-     */
-    private function parseTrackData()
-    {
-        $this->setNumber($this->getNumber());
-        $this->setDate($this->getDate());
-        $this->setCvv($this->getCvv());
-        $this->setName($this->getName());
-
-        return $this;
-    }
-
-    /**
-     * @param  string $subject
-     * @param  string $pattern
-     * @return false | array
-     */
-    private function isMatch($subject, $pattern)
-    {
-        if (preg_match('|' . $pattern . '|',  $subject, $matches) !== 1) {
-            return false;
-        }
-
-        return $matches;
     }
 }

@@ -4,6 +4,7 @@
     },
     "require": {
         "catfan/medoo": "^1.0.0",
-        "defuse/php-encryption": "^2.0.0"
+        "defuse/php-encryption": "^2.0.0",
+        "seld/cli-prompt": "^1.0"
     }
 }

@@ -2,8 +2,17 @@
 
 namespace Crad;
 
+use Defuse\Crypto;
+
 class Storage
 {
+
+    const KEY_FILE = '/home/er0k/.www/cradkey';
+
+    public function __construct()
+    {
+        $this->key = file_get_contents(self::KEY_FILE);
+    }
 
     /**
      * @param  Card $card
@@ -21,6 +30,8 @@ class Storage
      */
     public function saveCard(Card $card)
     {
+	$encryptedCard = $this->encrypt($card);
+
         return true;
     }
 
@@ -32,5 +43,10 @@ class Storage
     public function updateBalance(Card $card)
     {
         return true;
+    }
+
+    public function encrypt(Card $card)
+    {
+	return $card;
     }
 }
