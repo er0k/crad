@@ -7,7 +7,7 @@ class BalanceChecker
 
     private $card;
 
-    public function __construct(Card $card, Storage $storage)
+    public function __construct(Card $card, EncryptedStorage $storage)
     {
         $this->card = $card;
         $this->storage = $storage;

@@ -2,7 +2,7 @@
 
 namespace Crad;
 
-class CardReader
+class Reader
 {
     /** @var Card */
     private $card;
@@ -13,17 +13,13 @@ class CardReader
     /** @var BalanceChecker */
     private $balanceChecker;
 
-    /** @var Storage */
+    /** @var EncryptedStorage */
     private $storage;
-
-    const TRACK_ONE = "^%B([^\^\W]{0,19})\^([^\^]{2,26})\^(\d{4})(\w{3})[^?]+\?\w?$";
-
-    const TRACK_TWO = "^;([^=]{0,19})=(\d{4})(\w{3})[^?]+\?\w?$";
 
 
     public function __construct()
     {
-        $this->storage = new Storage();
+        $this->storage = new EncryptedStorage();
     }
 
     /**
@@ -72,7 +68,7 @@ class CardReader
     {
         foreach ([1,2] as $trackNum) {
             if (
-                ($data = $this->isTrack($trackNum, $input))
+                ($data = $this->card->isTrack($trackNum, $input))
                 && !$this->hasAllTracks()
             ) {
                 $this->addTrackData($trackNum, $data);
@@ -80,11 +76,11 @@ class CardReader
             }
         }
 
-        $this->setCardData();
-
         if (!empty($input)) {
             $this->parseExtraInput($input);
         }
+
+        $this->setCardData();
 
         return $this;
     }
@@ -105,27 +101,6 @@ class CardReader
     }
 
     /**
-     * @param  int $num
-     * @param  string $track
-     * @return false | array
-     */
-    private function isTrack($num, $track)
-    {
-        switch ($num) {
-            case 1: $pattern = self::TRACK_ONE; break;
-            case 2: $pattern = self::TRACK_TWO; break;
-            default:
-                throw new Exception("Only two tracks are supported");
-        }
-
-        if (!$data = $this->isMatch($track, $pattern)) {
-            return false;
-        }
-
-        return $data;
-    }
-
-    /**
      * @return Card
      */
     private function setCardData()
@@ -134,6 +109,7 @@ class CardReader
         $this->card->setDate($this->card->getDate());
         $this->card->setCvv($this->card->getCvv());
         $this->card->setName($this->card->getName());
+        $this->card->setHash($this->card->getHash());
 
         return $this;
     }
@@ -164,28 +140,15 @@ class CardReader
     }
 
     /**
-     * @param  string $subject
-     * @param  string $pattern
-     * @return false | array
-     */
-    private function isMatch($subject, $pattern)
-    {
-        if (preg_match('|' . $pattern . '|',  $subject, $matches) !== 1) {
-            return false;
-        }
-
-        return $matches;
-    }
-
-    /**
      * @param  Card $card
      * @return Card
      */
     private function findCard()
     {
-        $this->storedCard = $this->storage->findCard($this->card);
+        $this->storedCard = $this->storage->findCard($this->card->getHash());
 
         if ($this->storedCard) {
+            echo "getting card from storage\n";
             $this->card = $this->storedCard;
         }
 
@@ -204,16 +167,19 @@ class CardReader
 
         echo money_format('$%i', $balance) . "\n\n";
 
-        return false;
+        return true;
     }
 
     private function save()
     {
-        if (!$this->storedCard) {
-            $this->storage->saveCard($this->card);
+        if ($this->storedCard) {
+            // $result = $this->storage->update($this->card);
+            $result = 'no action needed';
+        } else {
+            $result = $this->storage->insert($this->card);
         }
 
-        $this->storage->updateBalance($this->card);
+        print_r(compact('result'));
 
         return true;
     }

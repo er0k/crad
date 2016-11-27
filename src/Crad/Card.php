@@ -2,7 +2,9 @@
 
 namespace Crad;
 
-class Card
+use Crad\EncryptedStorable;
+
+class Card implements \JsonSerializable, EncryptedStorable
 {
     /** @var string */
     private $number;
@@ -19,6 +21,17 @@ class Card
     /** @var array */
     private $tracks;
 
+    /** @var string */
+    private $hash;
+
+    const TRACK_ONE = "^%B([^\^\W]{0,19})\^([^\^]{2,26})\^(\d{4})(\w{3})[^?]+\?\w?$";
+    const TRACK_TWO = "^;([^=]{0,19})=(\d{4})(\w{3})[^?]+\?\w?$";
+
+    public function __construct(\stdClass $data = null)
+    {
+        $this->hydrate($data);
+    }
+
 
     /**
      * @return Card
@@ -30,6 +43,7 @@ class Card
             'number' => $this->getNumber(),
             'date' => $this->getDate(),
             'cvv' => $this->getCvv(),
+            'hash' => $this->getHash(),
         ]);
 
         return $this;
@@ -40,6 +54,14 @@ class Card
      */
     public function hasAllData()
     {
+        if (!$this->hasTrack(1)) {
+            return false;
+        }
+
+        if (!$this->hasTrack(2)) {
+            return false;
+        }
+
         if (!$this->hasNumber()) {
             return false;
         }
@@ -53,6 +75,10 @@ class Card
         }
 
         if (!$this->hasName()) {
+            return false;
+        }
+
+        if (!$this->hasHash()) {
             return false;
         }
 
@@ -78,13 +104,21 @@ class Card
             return $this->number;
         }
 
-        if (isset($this->tracks[1])) {
+        if ($this->hasTrack(1)) {
             return $this->tracks[1][1];
         }
 
-        if (isset($this->tracks[2])) {
+        if ($this->hasTrack(2)) {
             return $this->tracks[2][1];
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasNumber()
+    {
+        return !is_null($this->number);
     }
 
     /**
@@ -102,17 +136,25 @@ class Card
      */
     public function getDate()
     {
-        if ($this->date) {
+        if ($this->hasDate()) {
             return $this->date;
         }
 
-        if (isset($this->tracks[1])) {
+        if ($this->hasTrack(1)) {
             return $this->tracks[1][3];
         }
 
-        if (isset($this->tracks[2])) {
+        if ($this->hasTrack(2)) {
             return $this->tracks[2][2];
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasDate()
+    {
+        return !is_null($this->date);
     }
 
     /**
@@ -134,9 +176,17 @@ class Card
             return $this->name;
         }
 
-        if (isset($this->tracks[1])) {
+        if ($this->hasTrack(1)) {
             return $this->tracks[1][2];
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasName()
+    {
+        return !is_null($this->name);
     }
 
     /**
@@ -152,8 +202,32 @@ class Card
      */
     public function getCvv()
     {
-        if ($this->cvv) {
-            return $this->cvv;
+        return $this->cvv;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCvv()
+    {
+        return !is_null($this->cvv);
+    }
+
+    /**
+     * @param int $num
+     * @param string $track
+     */
+    public function setTrack($num, $track)
+    {
+        $this->tracks[$num] = $track;
+    }
+
+    public function setTracks($tracks)
+    {
+        foreach ($tracks as $num => $track) {
+            if ($this->isTrack($num, $track)) {
+                $this->setTrack($num, $track);
+            }
         }
     }
 
@@ -166,43 +240,119 @@ class Card
     }
 
     /**
-     * @param int $num
-     * @param string $track
+     * @param  int  $num
+     * @return bool
      */
-    public function setTrack($num, $track)
+    public function hasTrack($num)
     {
-        $this->tracks[$num] = $track;
+        return isset($this->tracks[$num]);
+    }
+
+    /**
+     * @param  int $num
+     * @param  string $track
+     * @return false | array
+     */
+    public function isTrack($num, $track)
+    {
+        if (is_array($track)) {
+            $track = $track[0];
+        }
+
+        switch ($num) {
+            case 1: $pattern = self::TRACK_ONE; break;
+            case 2: $pattern = self::TRACK_TWO; break;
+            default:
+                return false;
+        }
+
+        if (!($data = $this->isMatch($track, $pattern))) {
+            return false;
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param  string $subject
+     * @param  string $pattern
+     * @return false | array
+     */
+    private function isMatch($subject, $pattern)
+    {
+        if (preg_match('|' . $pattern . '|',  $subject, $matches) !== 1) {
+            return false;
+        }
+
+        return $matches;
+    }
+
+    /**
+     * @param string $hash
+     */
+    public function setHash($hash)
+    {
+        $this->hash = $hash;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHash()
+    {
+        if ($this->hasHash()) {
+            return $this->hash;
+        }
+
+        if ($this->hasNumber() && $this->hasDate()) {
+            return hash('sha512', $this->getNumber() . $this->getDate());
+        }
     }
 
     /**
      * @return bool
      */
-    private function hasNumber()
+    public function hasHash()
     {
-        return !is_null($this->number);
+        return !is_null($this->hash);
     }
 
     /**
-     * @return bool
+     * @param  stdClass $data
+     * @return void
      */
-    private function hasDate()
+    private function hydrate($data)
     {
-        return !is_null($this->date);
+        if (is_null($data)) {
+            return;
+        }
+
+        if (
+            isset($data->number)
+            && isset($data->date)
+            && isset($data->cvv)
+            && isset($data->name)
+            && isset($data->tracks)
+            && isset($data->hash)
+        ) {
+            $this->setTracks($data->tracks);
+            $this->setNumber($data->number);
+            $this->setDate($data->date);
+            $this->setCvv($data->cvv);
+            $this->setName($data->name);
+            $this->setHash($data->hash);
+        }
     }
 
-    /**
-     * @return bool
-     */
-    private function hasCvv()
+    public function jsonSerialize()
     {
-        return !is_null($this->cvv);
-    }
-
-    /**
-     * @return bool
-     */
-    private function hasName()
-    {
-        return !is_null($this->name);
+        return [
+            'number' => $this->getNumber(),
+            'date' => $this->getDate(),
+            'cvv' => $this->getCvv(),
+            'name' => $this->getName(),
+            'tracks' => $this->getTracks(),
+            'hash' => $this->getHash(),
+        ];
     }
 }
