@@ -2,9 +2,11 @@
 
 use Crad\BalanceChecker;
 use Crad\Card;
+use Crad\CardException;
 use Crad\EncryptedStorage;
-use Crad\Exception;
+use Crad\EncryptedStorageException;
 use Crad\Reader;
+use Crad\ReaderException;
 use Seld\CliPrompt\CliPrompt;
 
 class Crad
@@ -34,18 +36,24 @@ class Crad
 
     public function run()
     {
-        echo "running...\n";
-
         $this->getCard();
 
-        $this->parseInput();
+        try {
+            $this->parseInput();
+        } catch (ReaderException $re) {
+            echo $re->getMessage();
+            echo $re->getTraceAsString();
+        }
 
         // done reading, handle the card data
         try {
             $this->handleCard();
-        } catch (Exception $e) {
-            echo $e->getMessage();
-            echo $e->getTraceAsString();
+        } catch (CardException $ce) {
+            echo $ce->getMessage();
+            echo $ce->getTraceAsString();
+        } catch (EncryptedStorageException $ese) {
+            echo $ese->getMessage();
+            echo $ese->getTraceAsString();
         }
 
         $this->checkBalance();
@@ -73,11 +81,7 @@ class Crad
 
         // read from STDIN until ctrl+d or empty line
         while ($line = CliPrompt::hiddenPrompt()) {
-            try {
-                $this->reader->read($line);
-            } catch (ReaderException $e) {
-                echo $e->getMessage() . "\n";
-            }
+            $this->reader->read($line);
         }
 
         return $this;

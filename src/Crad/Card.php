@@ -47,7 +47,7 @@ class Card implements \JsonSerializable, EncryptedStorable
                 'number' => $this->getNumber(),
                 'date' => $this->getDate(),
                 'cvv' => $this->getCvv(),
-                'hash' => $this->getHash(),
+                #'hash' => $this->getHash(),
             ]);
         }
 
@@ -96,7 +96,7 @@ class Card implements \JsonSerializable, EncryptedStorable
     public function hasCardChanged(Card $card)
     {
         if (!$card->hasAllData() || !$this->hasAllData()) {
-            throw new Exception("Cannot compare cards without all data");
+            throw new CardException("Cannot compare cards without all data");
         }
 
         if (json_encode($card) === json_encode($this)) {
@@ -243,6 +243,9 @@ class Card implements \JsonSerializable, EncryptedStorable
         $this->tracks[$num] = $track;
     }
 
+    /**
+     * @param array | object
+     */
     public function setTracks($tracks)
     {
         foreach ($tracks as $num => $track) {
