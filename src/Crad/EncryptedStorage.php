@@ -6,6 +6,7 @@ use Crad\Card;
 use Crad\Exception;
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
+use Defuse\Crypto\WrongKeyOrModifiedCiphertextException;
 use medoo;
 
 class EncryptedStorage
@@ -55,7 +56,7 @@ class EncryptedStorage
     public function insert(Card $card)
     {
         if (!$card->hasAllData()) {
-            throw new Exception("Cannot save card without all data");
+            throw new EncryptedStorageException("Cannot save card without all data");
         }
 
         $encryptedData = $this->encrypt($card);
@@ -74,7 +75,7 @@ class EncryptedStorage
     public function update(Card $card)
     {
         if (!$card->hasAllData()) {
-            throw new Exception("Cannot update card without all data");
+            throw new EncryptedStorageException("Cannot update card without all data");
         }
 
         $encryptedCard = $this->encrypt($card);
@@ -102,10 +103,11 @@ class EncryptedStorage
      */
     private function decrypt($encryptedData)
     {
-        // this will throw a \Defuse\Crypto\WrongKeyOrModifiedCiphertextException
-        // if the wrong key was used or
-        // the encrypted data was modified/corrupted
-        $data = Crypto::decrypt($encryptedData, $this->getKey());
+        try {
+            $data = Crypto::decrypt($encryptedData, $this->getKey());
+        } catch (WrongKeyOrModifiedCiphertextException $e) {
+            throw new EncryptedStorageException("Wrong key or modified/corrupted data", 0, $e);
+        }
 
         return new Card(json_decode($data));
     }
@@ -137,7 +139,7 @@ class EncryptedStorage
         }
 
         if (!is_writable(self::DB_FILE)) {
-            throw new Exception("Can't write to database");
+            throw new EncryptedStorageException("Can't write to database");
         }
 
         return self::DB_FILE;
