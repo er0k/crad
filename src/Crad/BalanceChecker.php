@@ -4,13 +4,11 @@ namespace Crad;
 
 class BalanceChecker
 {
-
     private $card;
 
-    public function __construct(Card $card, EncryptedStorage $storage)
+    public function setCard(Card $card)
     {
         $this->card = $card;
-        $this->storage = $storage;
     }
 
     public function checkPreviousBalance()

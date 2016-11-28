@@ -3,6 +3,7 @@
 namespace Crad;
 
 use Crad\EncryptedStorable;
+use Crad\Exception;
 
 class Card implements \JsonSerializable, EncryptedStorable
 {
@@ -27,6 +28,8 @@ class Card implements \JsonSerializable, EncryptedStorable
     const TRACK_ONE = "^%B([^\^\W]{0,19})\^([^\^]{2,26})\^(\d{4})(\w{3})[^?]+\?\w?$";
     const TRACK_TWO = "^;([^=]{0,19})=(\d{4})(\w{3})[^?]+\?\w?$";
 
+    const SHOW_OUTPUT = true;
+
     public function __construct(\stdClass $data = null)
     {
         $this->hydrate($data);
@@ -38,13 +41,15 @@ class Card implements \JsonSerializable, EncryptedStorable
      */
     public function showInfo()
     {
-        print_r([
-            'name' => $this->getName(),
-            'number' => $this->getNumber(),
-            'date' => $this->getDate(),
-            'cvv' => $this->getCvv(),
-            'hash' => $this->getHash(),
-        ]);
+        if (self::SHOW_OUTPUT) {
+            print_r([
+                'name' => $this->getName(),
+                'number' => $this->getNumber(),
+                'date' => $this->getDate(),
+                'cvv' => $this->getCvv(),
+                'hash' => $this->getHash(),
+            ]);
+        }
 
         return $this;
     }
@@ -79,6 +84,22 @@ class Card implements \JsonSerializable, EncryptedStorable
         }
 
         if (!$this->hasHash()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCardChanged(Card $card)
+    {
+        if (!$card->hasAllData() || !$this->hasAllData()) {
+            throw new Exception("Cannot compare cards without all data");
+        }
+
+        if (json_encode($card) === json_encode($this)) {
             return false;
         }
 

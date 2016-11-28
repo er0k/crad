@@ -7,19 +7,21 @@ class Reader
     /** @var Card */
     private $card;
 
-    /** @var Card */
-    private $storedCard;
 
-    /** @var BalanceChecker */
-    private $balanceChecker;
-
-    /** @var EncryptedStorage */
-    private $storage;
-
-
-    public function __construct()
+    public function __construct(Card $card = null)
     {
-        $this->storage = new EncryptedStorage();
+        if (!$card) {
+            $card = new Card();
+        }
+
+        $this->card = $card;
+    }
+
+    public function setCard(Card $card)
+    {
+        $this->card = $card;
+
+        return $this;
     }
 
     /**
@@ -28,40 +30,12 @@ class Reader
      */
     public function read($input = '')
     {
-        $this->getCard();
-
-        $this->readInput($input);
-
-        if (!$this->card->hasAllData()) {
-            $this->findCard();
-        }
-
-        $this->card->showInfo();
-
-        if ($this->card->hasAllData()) {
-            if ($this->checkBalance()) {
-                $this->save();
-            }
-        }
-    }
-
-    /**
-     * @return Card
-     */
-    private function getCard()
-    {
-        if (is_null($this->card) || $this->card->hasAllData()) {
-            echo "new card\n";
-            $this->card = new Card();
-            $this->storedCard = null;
-        }
-
-        return $this->card;
+        $this->readInput($input)
+             ->setCardData();
     }
 
     /**
      * @param string $input
-     * @throws Exception
      * @return Card
      */
     private function readInput($input)
@@ -79,8 +53,6 @@ class Reader
         if (!empty($input)) {
             $this->parseExtraInput($input);
         }
-
-        $this->setCardData();
 
         return $this;
     }
@@ -133,54 +105,10 @@ class Reader
     private function addTrackData($num, $data)
     {
         if ($this->hasAllTracks()) {
-            throw new Exception("Tracks full");
+            throw new ReaderException("Tracks full");
         }
 
         $this->card->setTrack($num, $data);
     }
 
-    /**
-     * @param  Card $card
-     * @return Card
-     */
-    private function findCard()
-    {
-        $this->storedCard = $this->storage->findCard($this->card->getHash());
-
-        if ($this->storedCard) {
-            echo "getting card from storage\n";
-            $this->card = $this->storedCard;
-        }
-
-        return $this->card;
-    }
-
-    /**
-     * @return bool
-     */
-    private function checkBalance()
-    {
-        echo 'checking balance...';
-        $this->balanceChecker = new BalanceChecker($this->card, $this->storage);
-
-        $balance = $this->balanceChecker->checkPreviousBalance()->getCurrentBalance();
-
-        echo money_format('$%i', $balance) . "\n\n";
-
-        return true;
-    }
-
-    private function save()
-    {
-        if ($this->storedCard) {
-            // $result = $this->storage->update($this->card);
-            $result = 'no action needed';
-        } else {
-            $result = $this->storage->insert($this->card);
-        }
-
-        print_r(compact('result'));
-
-        return true;
-    }
 }

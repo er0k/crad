@@ -34,6 +34,8 @@ class EncryptedStorage
      */
     public function findCard($id)
     {
+        echo "finding...";
+
         $storedData = $this->db->get(self::TABLE,
             ['id', 'data'],
             ['id' => $id]
@@ -52,6 +54,10 @@ class EncryptedStorage
      */
     public function insert(Card $card)
     {
+        if (!$card->hasAllData()) {
+            throw new Exception("Cannot save card without all data");
+        }
+
         $encryptedData = $this->encrypt($card);
 
         echo "inserting...";
@@ -67,6 +73,10 @@ class EncryptedStorage
      */
     public function update(Card $card)
     {
+        if (!$card->hasAllData()) {
+            throw new Exception("Cannot update card without all data");
+        }
+
         $encryptedCard = $this->encrypt($card);
 
         echo "updating...";
