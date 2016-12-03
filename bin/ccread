@@ -8,4 +8,6 @@ require 'vendor/autoload.php';
 setlocale(LC_MONETARY, 'en_US');
 
 $crad = new Crad();
-$crad->run();
+while (true) {
+    $crad->run();
+}

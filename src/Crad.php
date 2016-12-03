@@ -40,7 +40,6 @@ class Crad
             echo $re->getTraceAsString();
         }
 
-        // done reading, handle the card data
         try {
             $this->handleCard();
         } catch (CardException $ce) {
@@ -51,12 +50,14 @@ class Crad
             echo $ese->getTraceAsString();
         }
 
-        $this->checkBalance();
+        try {
+            $this->checkBalance();
+        } catch (BalanceCheckerException $bce) {
+            echo $bce->getMessage();
+            echo $bce->getTraceAsString();
+        }
 
         $this->save();
-
-        // start over again
-        $this->run();
     }
 
     private function getCard($forceNew = false)
