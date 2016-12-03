@@ -2,9 +2,6 @@
 
 namespace Crad;
 
-use Crad\EncryptedStorable;
-use Crad\Exception;
-
 class Card implements \JsonSerializable, EncryptedStorable
 {
     /** @var string */
@@ -176,6 +173,22 @@ class Card implements \JsonSerializable, EncryptedStorable
     public function hasDate()
     {
         return !is_null($this->date);
+    }
+
+    /**
+     * @return string MM
+     */
+    public function getMonth()
+    {
+        return substr($this->getDate(), 2, 2);
+    }
+
+    /**
+     * @return string YY
+     */
+    public function getYear()
+    {
+        return substr($this->getDate(), 0, 2);
     }
 
     /**

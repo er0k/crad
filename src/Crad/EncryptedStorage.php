@@ -2,8 +2,6 @@
 
 namespace Crad;
 
-use Crad\Card;
-use Crad\Exception;
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
 use Defuse\Crypto\WrongKeyOrModifiedCiphertextException;

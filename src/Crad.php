@@ -23,15 +23,10 @@ class Crad
     /** @var Card */
     private $storedCard;
 
-    /** @var BalanceChecker */
-    private $checker;
-
-
     public function __construct()
     {
         $this->reader = new Reader();
         $this->storage = new EncryptedStorage();
-        $this->checker = new BalanceChecker();
     }
 
     public function run()
@@ -143,9 +138,9 @@ class Crad
     {
         if ($this->card->hasAllData()) {
             echo 'checking balance...';
-            $this->checker->setCard($this->card);
+            $checker = new BalanceChecker($this->card);
 
-            $balance = $this->checker->checkPreviousBalance()->getCurrentBalance();
+            $balance = $checker->checkPreviousBalance()->getCurrentBalance();
 
             echo money_format('$%i', $balance) . "\n\n";
         }
