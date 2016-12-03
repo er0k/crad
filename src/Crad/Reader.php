@@ -8,6 +8,9 @@ class Reader
     private $card;
 
 
+    /**
+     * @param Card | null $card
+     */
     public function __construct(Card $card = null)
     {
         if (!$card) {
@@ -17,6 +20,9 @@ class Reader
         $this->card = $card;
     }
 
+    /**
+     * @param Card $card
+     */
     public function setCard(Card $card)
     {
         $this->card = $card;

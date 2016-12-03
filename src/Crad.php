@@ -1,6 +1,7 @@
 <?php
 
 use Crad\BalanceChecker;
+use Crad\BalanceCheckerException;
 use Crad\Card;
 use Crad\CardException;
 use Crad\EncryptedStorage;
