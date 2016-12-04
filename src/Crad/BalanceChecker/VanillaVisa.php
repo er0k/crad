@@ -3,6 +3,7 @@
 namespace Crad\BalanceChecker;
 
 use Crad\Card;
+use Crad\BalanceCheckerException;
 use Goutte\Client;
 
 class VanillaVisa extends AbstractChecker
@@ -79,6 +80,10 @@ class VanillaVisa extends AbstractChecker
             'expYear' => $this->card->getYear(),
             'cvv' => $this->card->getCvv(),
         ]);
+
+        if (!$dom->filter('.SSaccountTitle')->count()) {
+            throw new BalanceCheckerException("Wrong credentials. Cannot check balance");
+        }
 
         return $dom;
     }
