@@ -3,7 +3,7 @@
 namespace Crad\BalanceChecker;
 
 use Crad\Card;
-
+use Crad\BalanceCheckerException;
 
 abstract class AbstractChecker
 {
@@ -19,19 +19,49 @@ abstract class AbstractChecker
 
     /**
      * @param Crad\Card $card
-     * @param string    $ua   User Agent String
      */
-    public function __construct(Card $card, $ua = '')
+    public function __construct(Card $card)
     {
         $this->card = $card;
-        $this->ua = $ua;
+        $this->ua = $this->getRandomUserAgentString();
         $this->dom = $this->getDom();
     }
 
     /**
+     * @return array
+     */
+    public function getBalanceSheet()
+    {
+        $currentBalance = $this->getBalance();
+        $transactions = $this->getTransactions();
+
+        $transactionTotal = 0;
+        foreach ($transactions as $transaction) {
+            $transactionTotal += $transaction['amount'];
+        }
+
+        if ($transactionTotal != $currentBalance) {
+            throw new BalanceCheckerException(
+                "Transaction total ($transactionTotal) does not match current balance ($currentBalance)"
+            );
+        }
+
+        return [
+            'currentBalance' => $currentBalance,
+            'transactions' => $transactions,
+        ];
+    }
+
+
+    /**
+     * @return Symfony\Component\DomCrawler\Crawler
+     */
+    abstract protected function getDom();
+
+    /**
      * @return float
      */
-    abstract public function getBalance();
+    abstract protected function getBalance();
 
     /**
      * array['transactions']
@@ -41,12 +71,8 @@ abstract class AbstractChecker
      *
      * @return array
      */
-    abstract public function getTransactions();
+    abstract protected function getTransactions();
 
-    /**
-     * @return Symfony\Component\DomCrawler\Crawler
-     */
-    abstract protected function getDom();
 
     /**
      * @param  string $amount
@@ -54,13 +80,7 @@ abstract class AbstractChecker
      */
     protected function cleanAmount($amount)
     {
-        $cleanAmount = preg_replace('|[^0-9-,.]|', '', $amount);
-
-        $cleanAmount = floatval($cleanAmount);
-
-        print_r(compact('cleanAmount'));
-
-        return $cleanAmount;
+        return floatval(preg_replace('|[^0-9-,.]|', '', $amount));
     }
 
     /**
@@ -72,7 +92,6 @@ abstract class AbstractChecker
         return trim($desc);
     }
 
-
     /**
      * @param  string $date
      * @return \DateTime
@@ -80,5 +99,23 @@ abstract class AbstractChecker
     protected function cleanDate($date)
     {
         return new \DateTime($date);
+    }
+
+    /**
+     * @return string
+     * @link https://github.com/rdegges/useragent-api
+     */
+    private function getRandomUserAgentString()
+    {
+        $defaultUa = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.85 Safari/537.36';
+
+        if ($response = file_get_contents('http://api.useragent.io')) {
+            $data = json_decode($response);
+            $ua = $data->ua;
+        } else {
+            $ua = $defaultUa;
+        }
+
+        return $ua;
     }
 }

@@ -142,9 +142,11 @@ class Crad
             echo 'checking balance...';
             $checker = new BalanceChecker($this->card);
 
-            $balance = $checker->checkPreviousBalance()->getCurrentBalance();
+            $balanceSheet = $checker->getBalanceSheet();
 
-            echo money_format('$%i', $balance) . "\n\n";
+            print_r(compact('balanceSheet'));
+
+            #echo money_format('$%i', $balance) . "\n\n";
         }
 
         return $this;

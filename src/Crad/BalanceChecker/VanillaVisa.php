@@ -12,7 +12,7 @@ class VanillaVisa extends AbstractChecker
     /**
      * @return float
      */
-    public function getBalance()
+    protected function getBalance()
     {
         $domBalance = $this->dom->filter('#Avlbal')->text();
 
@@ -22,7 +22,7 @@ class VanillaVisa extends AbstractChecker
     /**
      * @return array
      */
-    public function getTransactions()
+    protected function getTransactions()
     {
         $transactions = [];
 
@@ -35,11 +35,11 @@ class VanillaVisa extends AbstractChecker
 
             // sometimes there are multiple amounts for some reason
             // get the one that's not empty
-            $node->filter('.txnAmount')->each (function ($innerNode) use ($i, &$transactions) {
+            $node->filter('.txnAmount')->each(function ($innerNode) use ($i, &$transactions) {
                 $domAmount = trim($innerNode->text());
                 if (!empty($domAmount)) {
                     $transactions[$i]['amount'] = $this->cleanAmount($domAmount);
-                    break;
+                    return;
                 }
             });
         });
@@ -51,9 +51,7 @@ class VanillaVisa extends AbstractChecker
             }
 
             return ($a['date'] < $b['date']) ? -1 : 1;
-        }
-
-        print_r(compact('transactions'));
+        });
 
         return $transactions;
     }
