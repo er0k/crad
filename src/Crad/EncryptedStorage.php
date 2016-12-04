@@ -16,9 +16,7 @@ class EncryptedStorage
     private $db;
 
     const KEY_FILE = '/home/er0k/.www/cradkey';
-
     const DB_FILE = 'data/crad.db';
-
     const TABLE = 'cards';
 
     public function __construct()
@@ -87,6 +85,33 @@ class EncryptedStorage
     }
 
     /**
+     * @return void
+     * @throws EncryptedStorageException
+     */
+    public function inititalize()
+    {
+        $table = self::TABLE;
+
+        $existsSql = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '{$table}'";
+        $tableExists = $this->db->query($existsSql)->fetch();
+
+        if ($tableExists) {
+            echo "{$table} table already exists\n";
+            return;
+        }
+
+        $createSql = "CREATE TABLE {$table} (id CHAR PRIMARY KEY NOT NULL, data CHAR);";
+
+        $createTable = $this->db->query($createSql);
+
+        if ($createTable) {
+            echo "{$table} table created\n";
+        } else {
+            throw new EncryptedStorageException("Could not create database table");
+        }
+    }
+
+    /**
      * @param  Card $data
      * @return string
      */
@@ -118,6 +143,9 @@ class EncryptedStorage
         return Key::loadFromAsciiSafeString($this->key);
     }
 
+    /**
+     * @return medoo
+     */
     private function getDb()
     {
         if ($this->db) {
@@ -130,6 +158,9 @@ class EncryptedStorage
         ]);
     }
 
+    /**
+     * @return string
+     */
     private function getDbFile()
     {
         if (!is_file(self::DB_FILE)) {
