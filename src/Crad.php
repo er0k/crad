@@ -2,6 +2,7 @@
 
 use Crad\BalanceChecker;
 use Crad\BalanceCheckerException;
+use Crad\BalanceSheet;
 use Crad\Card;
 use Crad\CardException;
 use Crad\EncryptedStorage;
@@ -24,6 +25,12 @@ class Crad
     /** @var Card */
     private $storedCard;
 
+    /** @var BalanceSheet */
+    private $balanceSheet;
+
+    /** @var BalanceSheet */
+    private $storedBalanceSheet;
+
     public function __construct()
     {
         $this->reader = new Reader();
@@ -37,24 +44,24 @@ class Crad
         try {
             $this->parseInput();
         } catch (ReaderException $re) {
-            echo $re->getMessage();
+            echo $re->getMessage() . "\n";
             echo $re->getTraceAsString();
         }
 
         try {
             $this->handleCard();
         } catch (CardException $ce) {
-            echo $ce->getMessage();
+            echo $ce->getMessage() . "\n";
             echo $ce->getTraceAsString();
         } catch (EncryptedStorageException $ese) {
-            echo $ese->getMessage();
+            echo $ese->getMessage() . "\n";
             echo $ese->getTraceAsString();
         }
 
         try {
             $this->checkBalance();
         } catch (BalanceCheckerException $bce) {
-            echo $bce->getMessage();
+            echo $bce->getMessage() . "\n";
             echo $bce->getTraceAsString();
         }
 
@@ -144,8 +151,6 @@ class Crad
 
             $balanceSheet = $checker->getBalanceSheet();
 
-            print_r(compact('balanceSheet'));
-
             #echo money_format('$%i', $balance) . "\n\n";
         }
 
@@ -162,7 +167,6 @@ class Crad
     }
 
     /**
-     * @param  Card $card
      * @return Card | null
      */
     private function findStoredCard()
@@ -178,5 +182,23 @@ class Crad
         }
 
         return $this->storedCard;
+    }
+
+    /**
+     * @return BalanceSheet | null
+     */
+    private function findStoredBalanceSheet()
+    {
+        if (!$this->storedBalanceSheet) {
+            $this->storedBalanceSheet = $this->storage->findBalanceSheet($this->balanceSheet->getHash());
+        }
+
+        if ($this->storedBalanceSheet) {
+            echo "get balance sheet from storage\n";
+        } else {
+            echo "balance sheet not stored\n";
+        }
+
+        return $this->storedBalanceSheet;
     }
 }

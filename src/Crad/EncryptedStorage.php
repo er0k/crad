@@ -17,7 +17,8 @@ class EncryptedStorage
 
     const KEY_FILE = '/home/er0k/.www/cradkey';
     const DB_FILE = 'data/crad.db';
-    const TABLE = 'cards';
+    const CARDS_TABLE = 'cards';
+    const SHEETS_TABLE = 'sheets';
 
     public function __construct()
     {
@@ -31,19 +32,19 @@ class EncryptedStorage
      */
     public function findCard($id)
     {
-        echo "finding...";
-
-        $storedData = $this->db->get(self::TABLE,
-            ['id', 'data'],
-            ['id' => $id]
-        );
-
-        if ($storedData) {
-            return $this->decrypt($storedData['data']);
-        }
-
-        return null;
+        return $this->find(self::CARDS_TABLE, $id);
     }
+
+    /**
+     * @param  string $id
+     * @return BalanceSheet
+     */
+    public function findSheet($id)
+    {
+        return $this->find(self::SHEETS_TABLE, $id);
+    }
+
+
 
     /**
      * @param  Card $data
@@ -59,7 +60,7 @@ class EncryptedStorage
 
         echo "inserting...";
 
-        return $this->db->insert(self::TABLE,
+        return $this->db->insert(self::CARDS_TABLE,
             ['id' => $card->getHash(), 'data' => $encryptedData]
         );
     }
@@ -78,7 +79,7 @@ class EncryptedStorage
 
         echo "updating...";
 
-        return $this->db->update(self::TABLE,
+        return $this->db->update(self::CARDS_TABLE,
             ['data' => $encryptedCard],
             ['id' => $card->getHash()]
         );
@@ -90,8 +91,12 @@ class EncryptedStorage
      */
     public function inititalize()
     {
-        $table = self::TABLE;
+        $this->createTable(self::CARDS_TABLE);
+        $this->createTable(self::SHEETS_TABLE);
+    }
 
+    private function createTable($table)
+    {
         $existsSql = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '{$table}'";
         $tableExists = $this->db->query($existsSql)->fetch();
 
@@ -107,8 +112,29 @@ class EncryptedStorage
         if ($createTable) {
             echo "{$table} table created\n";
         } else {
-            throw new EncryptedStorageException("Could not create database table");
+            throw new EncryptedStorageException("Could not create database table {$table}");
         }
+    }
+
+    /**
+     * @param  string $table
+     * @param  string $id
+     * @return EncryptedStorable | null
+     */
+    private function find($table, $id)
+    {
+        echo "finding in {$table}...";
+
+        $storedData = $this->db->get($table,
+            ['id', 'data'],
+            ['id' => $id]
+        );
+
+        if ($storedData) {
+            return $this->decrypt($storedData['data']);
+        }
+
+        return null;
     }
 
     /**

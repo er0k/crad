@@ -3,6 +3,7 @@
 namespace Crad\BalanceChecker;
 
 use Crad\Card;
+use Crad\BalanceSheet;
 use Crad\BalanceCheckerException;
 
 abstract class AbstractChecker
@@ -28,11 +29,11 @@ abstract class AbstractChecker
     }
 
     /**
-     * @return array
+     * @return BalanceSheet
      */
     public function getBalanceSheet()
     {
-        $currentBalance = $this->getBalance();
+        $balance = $this->getBalance();
         $transactions = $this->getTransactions();
 
         $transactionTotal = 0;
@@ -40,16 +41,20 @@ abstract class AbstractChecker
             $transactionTotal += $transaction['amount'];
         }
 
-        if ($transactionTotal != $currentBalance) {
+        if (!$this->isEqual($transactionTotal, $balance)) {
             throw new BalanceCheckerException(
-                "Transaction total ($transactionTotal) does not match current balance ($currentBalance)"
+                "Transaction total ($transactionTotal) does not match current balance ($balance)"
             );
         }
 
-        return [
-            'currentBalance' => $currentBalance,
+        print_r(compact('transactions', 'balance'));
+
+        $balanceSheet = json_encode([
             'transactions' => $transactions,
-        ];
+            'balance' => $balance,
+        ]);
+
+        return new BalanceSheet(json_decode($balanceSheet));
     }
 
 
@@ -117,5 +122,14 @@ abstract class AbstractChecker
         }
 
         return $ua;
+    }
+
+    private function isEqual($a, $b)
+    {
+        if (bccomp("$a", "$b", 3) === 0) {
+            return true;
+        }
+
+        return false;
     }
 }

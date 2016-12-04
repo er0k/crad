@@ -15,6 +15,9 @@ class BalanceChecker
         $this->checker = $this->getChecker($card);
     }
 
+    /**
+     * @return BalanceSheet
+     */
     public function getBalanceSheet()
     {
         return $this->checker->getBalanceSheet();

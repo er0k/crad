@@ -27,11 +27,13 @@ class Card implements \JsonSerializable, EncryptedStorable
 
     const SHOW_OUTPUT = true;
 
+    /**
+     * @param \stdClass | null $data
+     */
     public function __construct(\stdClass $data = null)
     {
         $this->hydrate($data);
     }
-
 
     /**
      * @return Card
@@ -370,17 +372,20 @@ class Card implements \JsonSerializable, EncryptedStorable
             && isset($data->cvv)
             && isset($data->name)
             && isset($data->tracks)
-            && isset($data->hash)
         ) {
             $this->setTracks($data->tracks);
             $this->setNumber($data->number);
             $this->setDate($data->date);
             $this->setCvv($data->cvv);
             $this->setName($data->name);
-            $this->setHash($data->hash);
+
+            $this->setHash($this->getHash());
         }
     }
 
+    /**
+     * @return array
+     */
     public function jsonSerialize()
     {
         return [
