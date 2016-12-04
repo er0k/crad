@@ -4,7 +4,7 @@ namespace Crad;
 
 class BalanceChecker
 {
-    /** @var BalanceChecker\BalanceCheckable */
+    /** @var BalanceChecker\AbstractChecker */
     private $checker;
 
     /**
@@ -20,6 +20,8 @@ class BalanceChecker
      */
     public function checkPreviousBalance()
     {
+        $this->checker->getTransactions();
+
         return $this;
     }
 
@@ -33,26 +35,21 @@ class BalanceChecker
 
     /**
      * @param  Card   $card
-     * @return BalanceChecker\BalanceCheckable
+     * @return BalanceChecker\AbstractChecker
      */
     private function getChecker(Card $card)
     {
-        $checker = null;
-
         $ua = $this->getRandomUserAgentString();
 
         $number = $card->getNumber();
 
         switch ($number) {
             case preg_match('|^4[0-9]{12}(?:[0-9]{3})?$|', $number) === 1:
-                $checker = new BalanceChecker\VanillaVisa($card, $ua);
+                return new BalanceChecker\VanillaVisa($card, $ua);
                 break;
             default:
-                throw new BalanceCheckerException("Card type no implemented");
+                throw new BalanceCheckerException("Card type not implemented");
         }
-
-        return $checker;
-
     }
 
     /**

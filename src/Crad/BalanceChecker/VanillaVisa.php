@@ -5,50 +5,84 @@ namespace Crad\BalanceChecker;
 use Crad\Card;
 use Goutte\Client;
 
-class VanillaVisa implements BalanceCheckable
+class VanillaVisa extends AbstractChecker
 {
     const URL = 'https://www.onevanilla.com';
-
-    /** @var Card */
-    private $card;
-
-    /** @var string User Agent String */
-    private $ua;
-
-    /**
-     * @param Card   $card
-     * @param string $ua
-     */
-    public function __construct(Card $card, $ua = '')
-    {
-        $this->card = $card;
-        $this->ua = $ua;
-    }
 
     /**
      * @return float
      */
     public function getBalance()
     {
+        $domBalance = $this->dom->filter('#Avlbal')->text();
+
+        return $this->cleanAmount($domBalance);
+    }
+
+    /**
+     * @return array
+     */
+    public function getTransactions()
+    {
+        $transactions = [];
+
+        $this->dom->filter('.txnStripe')->each(function ($node, $i) use (&$transactions) {
+            $domDate = $node->filter('.txnDate')->text();
+            $domDesc = $node->filter('.txnDesc')->text();
+
+            $transactions[$i]['date'] = $this->cleanDate($domDate);
+            $transactions[$i]['desc'] = $this->cleanDescription($domDesc);
+
+            // sometimes there are multiple amounts for some reason
+            // get the one that's not empty
+            $node->filter('.txnAmount')->each (function ($innerNode) use ($i, &$transactions) {
+                $domAmount = trim($innerNode->text());
+                if (!empty($domAmount)) {
+                    $transactions[$i]['amount'] = $this->cleanAmount($domAmount);
+                    break;
+                }
+            });
+        });
+
+        // sort by date
+        usort($transactions, function($a, $b) {
+            if ($a['date'] == $b['date']) {
+                return 0;
+            }
+
+            return ($a['date'] < $b['date']) ? -1 : 1;
+        }
+
+        print_r(compact('transactions'));
+
+        return $transactions;
+    }
+
+    /**
+     * @return Symfony\Component\DomCrawler\Crawler
+     */
+    protected function getDom()
+    {
+        if ($this->dom) {
+            return $this->dom;
+        }
+
         $client = new Client();
 
         if (!empty($this->ua)) {
             $client->setHeader('user-agent', $this->ua);
         }
 
-        $crawler = $client->request('GET', self::URL);
-        $form = $crawler->selectButton('Sign In')->form();
-        $crawler = $client->submit($form, [
+        $dom = $client->request('GET', self::URL);
+        $form = $dom->selectButton('Sign In')->form();
+        $dom = $client->submit($form, [
             'cardNumber' => $this->card->getNumber(),
             'expMonth' => $this->card->getMonth(),
             'expYear' => $this->card->getYear(),
             'cvv' => $this->card->getCvv(),
         ]);
 
-        $balance = trim($crawler->filter('#Avlbal')->text());
-
-        $balance = preg_replace('|[^0-9,.]|', '', $balance);
-
-        return floatval($balance);
+        return $dom;
     }
+
 }
