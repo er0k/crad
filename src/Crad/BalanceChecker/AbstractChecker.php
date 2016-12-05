@@ -47,14 +47,13 @@ abstract class AbstractChecker
             );
         }
 
-        print_r(compact('transactions', 'balance'));
+        $balanceSheet = new BalanceSheet();
 
-        $balanceSheet = json_encode([
-            'transactions' => $transactions,
-            'balance' => $balance,
-        ]);
+        $balanceSheet->setBalance($balance);
+        $balanceSheet->setTransactions($transactions);
+        $balanceSheet->setHash($this->card->getHash());
 
-        return new BalanceSheet(json_decode($balanceSheet));
+        return $balanceSheet;
     }
 
 

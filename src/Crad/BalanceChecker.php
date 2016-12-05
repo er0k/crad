@@ -20,7 +20,9 @@ class BalanceChecker
      */
     public function getBalanceSheet()
     {
-        return $this->checker->getBalanceSheet();
+        $balanceSheet = $this->checker->getBalanceSheet();
+
+        return $balanceSheet;
     }
 
     /**

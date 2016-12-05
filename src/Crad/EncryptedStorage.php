@@ -39,49 +39,47 @@ class EncryptedStorage
      * @param  string $id
      * @return BalanceSheet
      */
-    public function findSheet($id)
+    public function findBalanceSheet($id)
     {
         return $this->find(self::SHEETS_TABLE, $id);
     }
 
-
-
     /**
-     * @param  Card $data
+     * @param  EncryptedStorable $data
      * @return int | false
      */
-    public function insert(Card $card)
+    public function insert($data)
     {
-        if (!$card->hasAllData()) {
-            throw new EncryptedStorageException("Cannot save card without all data");
+        if (!$data->hasAllData()) {
+            throw new EncryptedStorageException("Cannot save without all data");
         }
 
-        $encryptedData = $this->encrypt($card);
+        $encryptedData = $this->encrypt($data);
 
         echo "inserting...";
 
-        return $this->db->insert(self::CARDS_TABLE,
-            ['id' => $card->getHash(), 'data' => $encryptedData]
+        return $this->db->insert($this->determineTable($data),
+            ['id' => $data->getHash(), 'data' => $encryptedData]
         );
     }
 
     /**
-     * @param  Card $data
+     * @param  EncryptedStorable $data
      * @return int | false
      */
-    public function update(Card $card)
+    public function update($data)
     {
-        if (!$card->hasAllData()) {
-            throw new EncryptedStorageException("Cannot update card without all data");
+        if (!$data->hasAllData()) {
+            throw new EncryptedStorageException("Cannot update without all data");
         }
 
-        $encryptedCard = $this->encrypt($card);
+        $encryptedData = $this->encrypt($data);
 
         echo "updating...";
 
-        return $this->db->update(self::CARDS_TABLE,
-            ['data' => $encryptedCard],
-            ['id' => $card->getHash()]
+        return $this->db->update($this->determineTable($data),
+            ['data' => $encryptedData],
+            ['id' => $data->getHash()]
         );
     }
 
@@ -95,6 +93,10 @@ class EncryptedStorage
         $this->createTable(self::SHEETS_TABLE);
     }
 
+    /**
+     * @param string $table
+     * @throws EncryptedStorageException
+     */
     private function createTable($table)
     {
         $existsSql = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '{$table}'";
@@ -131,26 +133,44 @@ class EncryptedStorage
         );
 
         if ($storedData) {
-            return $this->decrypt($storedData['data']);
+            return $this->decrypt($storedData['data'], $table);
         }
 
         return null;
     }
 
     /**
-     * @param  Card $data
+     * @param  EncryptedStorable $class
      * @return string
      */
-    private function encrypt(Card $card)
+    private function determineTable($class)
     {
-        return Crypto::encrypt(json_encode($card), $this->getKey());
+        if ($class instanceof Card) {
+            return self::CARDS_TABLE;
+        }
+
+        if ($class instanceof BalanceSheet) {
+            return self::SHEETS_TABLE;
+        }
+
+        throw new EncryptedStorageException("Tried to store unknown data type");
+    }
+
+    /**
+     * @param  EncryptedStorable $data
+     * @return string
+     */
+    private function encrypt($data)
+    {
+        return Crypto::encrypt(json_encode($data), $this->getKey());
     }
 
     /**
      * @param  string $encryptedData
-     * @return Card
+     * @param  string $table
+     * @return EncryptedStorable
      */
-    private function decrypt($encryptedData)
+    private function decrypt($encryptedData, $table)
     {
         try {
             $data = Crypto::decrypt($encryptedData, $this->getKey());
@@ -158,7 +178,20 @@ class EncryptedStorage
             throw new EncryptedStorageException("Wrong key or modified/corrupted data", 0, $e);
         }
 
-        return new Card(json_decode($data));
+        return $this->determineClass($table)->hydrate(json_decode($data));
+    }
+
+    private function determineClass($table)
+    {
+        if ($table == self::CARDS_TABLE) {
+            return new Card();
+        }
+
+        if ($table == self::SHEETS_TABLE) {
+            return new BalanceSheet();
+        }
+
+        throw new EncryptedStorageException("Unknown table");
     }
 
     /**

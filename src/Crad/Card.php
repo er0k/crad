@@ -27,13 +27,6 @@ class Card implements \JsonSerializable, EncryptedStorable
 
     const SHOW_OUTPUT = true;
 
-    /**
-     * @param \stdClass | null $data
-     */
-    public function __construct(\stdClass $data = null)
-    {
-        $this->hydrate($data);
-    }
 
     /**
      * @return Card
@@ -360,7 +353,7 @@ class Card implements \JsonSerializable, EncryptedStorable
      * @param  stdClass $data
      * @return void
      */
-    private function hydrate($data)
+    public function hydrate($data)
     {
         if (is_null($data)) {
             return;
@@ -381,6 +374,8 @@ class Card implements \JsonSerializable, EncryptedStorable
 
             $this->setHash($this->getHash());
         }
+
+        return $this;
     }
 
     /**

@@ -13,12 +13,56 @@ class BalanceSheet implements \JsonSerializable, EncryptedStorable
     /** @var string */
     private $hash;
 
+    const SHOW_OUTPUT = true;
+
+
     /**
-     * @param \stdClass | null $data
+     * @return BalanceSheet
      */
-    public function __construct(\stdClass $data = null)
+    public function showInfo()
     {
-        $this->hydrate($data);
+        if (self::SHOW_OUTPUT) {
+            print_r([
+                'balance' => $this->getBalance(),
+                'transactions' => $this->getTransactions(),
+                #'hash' => $this->getHash(),
+            ]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasAllData()
+    {
+        if (!$this->hasBalance()) {
+            return false;
+        }
+
+        if (!$this->hasTransactions()) {
+            return false;
+        }
+
+        if (!$this->hasHash()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function hasChanged(BalanceSheet $balanceSheet)
+    {
+        if (!$balanceSheet->hasAllData() || !$this->hasAllData()) {
+            throw new BalanceSheetException("Cannot compare balance sheets without all data");
+        }
+
+        if (json_encode($balanceSheet) === json_encode($this)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -85,10 +129,6 @@ class BalanceSheet implements \JsonSerializable, EncryptedStorable
         if ($this->hasHash()) {
             return $this->hash;
         }
-
-        if ($this->hasBalance() && $this->hasTransactions()) {
-            return hash('sha512', $this->getBalance() . json_encode($this->getTransactions()));
-        }
     }
 
     /**
@@ -103,7 +143,7 @@ class BalanceSheet implements \JsonSerializable, EncryptedStorable
      * @param  stdClass $data
      * @return void
      */
-    private function hydrate($data)
+    public function hydrate($data)
     {
         if (is_null($data)) {
             return;
@@ -112,12 +152,14 @@ class BalanceSheet implements \JsonSerializable, EncryptedStorable
         if (
             isset($data->balance)
             && isset($data->transactions)
+            && isset($data->hash)
         ) {
             $this->setBalance($data->balance);
             $this->setTransactions($data->transactions);
-
-            $this->setHash($this->getHash());
+            $this->setHash($data->hash);
         }
+
+        return $this;
     }
 
     /**

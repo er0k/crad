@@ -3,6 +3,7 @@
 use Crad\BalanceChecker;
 use Crad\BalanceCheckerException;
 use Crad\BalanceSheet;
+use Crad\BalanceSheetException;
 use Crad\Card;
 use Crad\CardException;
 use Crad\EncryptedStorage;
@@ -59,21 +60,24 @@ class Crad
         }
 
         try {
-            $this->checkBalance();
+            $this->handleBalanceSheet();
+        } catch (BalanceSheetException $bse) {
+            echo $bse->getMessage() . "\n";
+            echo $bse->getTraceAsString();
         } catch (BalanceCheckerException $bce) {
             echo $bce->getMessage() . "\n";
             echo $bce->getTraceAsString();
         }
-
-        $this->save();
     }
 
     private function getCard($forceNew = false)
     {
         if ($this->shouldGetNewCard() || $forceNew) {
-            echo "----- new card -----\n";
+            echo "\n----- new card -----\n";
             $this->card = new Card();
             $this->storedCard = null;
+            $this->balanceSheet = null;
+            $this->storedBalanceSheet = null;
         }
 
         return $this->card;
@@ -143,27 +147,59 @@ class Crad
     /**
      * @return Crad
      */
-    private function checkBalance()
+    private function handleBalanceSheet()
     {
-        if ($this->card->hasAllData()) {
-            echo 'checking balance...';
-            $checker = new BalanceChecker($this->card);
+        if ($this->findStoredBalanceSheet()) {
+            return $this->handleStoredBalanceSheet();
+        }
 
-            $balanceSheet = $checker->getBalanceSheet();
+        $this->checkBalance();
 
-            #echo money_format('$%i', $balance) . "\n\n";
+        $this->balanceSheet->showInfo();
+
+        if ($this->balanceSheet->hasAllData()) {
+            $this->storage->insert($this->balanceSheet);
         }
 
         return $this;
     }
 
-    /**
-     * @return Crad
-     */
-    private function save()
+    private function handleStoredBalanceSheet()
     {
-        // save
+        $this->storedBalanceSheet->showInfo();
+
+        echo "Check most current balance? y/n\n";
+
+        $response = CliPrompt::prompt();
+
+        if ($response == 'y') {
+            $this->checkBalance();
+        } else {
+            $this->balanceSheet = $this->storedBalanceSheet;
+        }
+
+        if ($this->balanceSheet->hasAllData()) {
+            if ($this->balanceSheet->hasChanged($this->storedBalanceSheet)) {
+                $this->storage->update($this->balanceSheet);
+            }
+        } else {
+            $this->balanceSheet = $this->storedBalanceSheet;
+        }
+
         return $this;
+    }
+
+    private function checkBalance()
+    {
+        if ($this->card->hasAllData()) {
+            echo 'checking balance...';
+        }
+
+        $checker = new BalanceChecker($this->card);
+
+        $this->balanceSheet = $checker->getBalanceSheet();
+
+        $this->balanceSheet->showInfo();
     }
 
     /**
@@ -190,11 +226,11 @@ class Crad
     private function findStoredBalanceSheet()
     {
         if (!$this->storedBalanceSheet) {
-            $this->storedBalanceSheet = $this->storage->findBalanceSheet($this->balanceSheet->getHash());
+            $this->storedBalanceSheet = $this->storage->findBalanceSheet($this->card->getHash());
         }
 
         if ($this->storedBalanceSheet) {
-            echo "get balance sheet from storage\n";
+            echo "got balance sheet from storage\n";
         } else {
             echo "balance sheet not stored\n";
         }
