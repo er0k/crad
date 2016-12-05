@@ -153,12 +153,11 @@ class Crad
             return $this->handleStoredBalanceSheet();
         }
 
-        $this->checkBalance();
-
-        $this->balanceSheet->showInfo();
-
-        if ($this->balanceSheet->hasAllData()) {
-            $this->storage->insert($this->balanceSheet);
+        if ($this->card->hasAllData()) {
+            $this->checkBalance();
+            if ($this->balanceSheet->hasAllData()) {
+                $this->storage->insert($this->balanceSheet);
+            }
         }
 
         return $this;
@@ -191,9 +190,7 @@ class Crad
 
     private function checkBalance()
     {
-        if ($this->card->hasAllData()) {
-            echo 'checking balance...';
-        }
+        echo 'checking balance...';
 
         $checker = new BalanceChecker($this->card);
 
