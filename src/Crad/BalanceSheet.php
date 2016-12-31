@@ -23,8 +23,8 @@ class BalanceSheet implements \JsonSerializable, EncryptedStorable
     {
         if (self::SHOW_OUTPUT) {
             print_r([
-                'balance' => $this->getBalance(),
                 'transactions' => $this->getTransactions(),
+                'balance' => $this->getBalance(),
                 #'hash' => $this->getHash(),
             ]);
         }

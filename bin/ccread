@@ -2,10 +2,9 @@
 <?php
 
 chdir(dirname(__DIR__));
+setlocale(LC_MONETARY, 'en_US');
 
 require 'vendor/autoload.php';
-
-setlocale(LC_MONETARY, 'en_US');
 
 $crad = new Crad();
 while (true) {

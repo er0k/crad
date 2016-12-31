@@ -5,7 +5,4 @@ chdir(dirname(__DIR__));
 
 require 'vendor/autoload.php';
 
-use Defuse\Crypto\Key;
-
-$key = Key::createNewRandomKey();
-echo $key->saveToAsciiSafeString();
+echo Defuse\Crypto\Key::createNewRandomKey()->saveToAsciiSafeString() . "\n";

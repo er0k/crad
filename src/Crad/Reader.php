@@ -37,7 +37,7 @@ class Reader
     public function read($input = '')
     {
         $this->readInput($input)
-             ->setCardData();
+            ->setCardData();
     }
 
     /**

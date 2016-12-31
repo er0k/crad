@@ -40,37 +40,35 @@ class Crad
 
     public function run()
     {
-        $this->getCard();
+        $this->initialize();
 
         try {
             $this->parseInput();
         } catch (ReaderException $re) {
-            echo $re->getMessage() . "\n";
-            echo $re->getTraceAsString();
+            $this->handleError($re);
         }
 
         try {
             $this->handleCard();
         } catch (CardException $ce) {
-            echo $ce->getMessage() . "\n";
-            echo $ce->getTraceAsString();
+            $this->handleError($ce);
         } catch (EncryptedStorageException $ese) {
-            echo $ese->getMessage() . "\n";
-            echo $ese->getTraceAsString();
+            $this->handleError($ese);
         }
 
         try {
             $this->handleBalanceSheet();
         } catch (BalanceSheetException $bse) {
-            echo $bse->getMessage() . "\n";
-            echo $bse->getTraceAsString();
-        } catch (BalanceCheckerException $bce) {
-            echo $bce->getMessage() . "\n";
-            echo $bce->getTraceAsString();
+            $this->handleError($bse);
+        } catch (EncryptedStorableException $ese) {
+            $this->handleError($ese);
         }
     }
 
-    private function getCard($forceNew = false)
+    /**
+     * @param  bool $forceNew
+     */
+    private function initialize($forceNew = false)
     {
         if ($this->shouldGetNewCard() || $forceNew) {
             echo "\n----- new card -----\n";
@@ -79,10 +77,13 @@ class Crad
             $this->balanceSheet = null;
             $this->storedBalanceSheet = null;
         }
-
-        return $this->card;
     }
 
+    /**
+     * @return Crad
+     * @throws RuntimeException
+     * @throws ReaderException
+     */
     private function parseInput()
     {
         $this->reader->setCard($this->card);
@@ -95,6 +96,9 @@ class Crad
         return $this;
     }
 
+    /**
+     * @return bool
+     */
     private function shouldGetNewCard()
     {
         if (!$this->card) {
@@ -163,26 +167,25 @@ class Crad
         return $this;
     }
 
+    /**
+     * @return Crad
+     */
     private function handleStoredBalanceSheet()
     {
         $this->storedBalanceSheet->showInfo();
 
+        $this->balanceSheet = $this->storedBalanceSheet;
+
         echo "Check most current balance? y/n\n";
 
-        $response = CliPrompt::prompt();
-
-        if ($response == 'y') {
+        if (CliPrompt::prompt() == 'y') {
             $this->checkBalance();
-        } else {
-            $this->balanceSheet = $this->storedBalanceSheet;
         }
 
         if ($this->balanceSheet->hasAllData()) {
             if ($this->balanceSheet->hasChanged($this->storedBalanceSheet)) {
                 $this->storage->update($this->balanceSheet);
             }
-        } else {
-            $this->balanceSheet = $this->storedBalanceSheet;
         }
 
         return $this;
@@ -233,5 +236,12 @@ class Crad
         }
 
         return $this->storedBalanceSheet;
+    }
+
+    private function handleError($error)
+    {
+        echo $error->getMessage();
+        echo "\n";
+        echo $error->getTraceAsString();
     }
 }

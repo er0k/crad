@@ -36,7 +36,6 @@ class BalanceChecker
         switch ($number) {
             case preg_match('|^4[0-9]{12}(?:[0-9]{3})?$|', $number) === 1:
                 return new BalanceChecker\VanillaVisa($card);
-                break;
             default:
                 throw new BalanceCheckerException("Card type not implemented");
         }

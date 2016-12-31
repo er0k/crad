@@ -29,12 +29,41 @@ abstract class AbstractChecker
     }
 
     /**
+     * @return Symfony\Component\DomCrawler\Crawler
+     */
+    abstract protected function getDom();
+
+    /**
+     * @return float
+     */
+    abstract protected function getBalance();
+
+    /**
+     * array['transactions']
+     *         ['date']   DateTime
+     *         ['desc']   string
+     *         ['amount'] float
+     *
+     * @return array
+     */
+    abstract protected function getTransactions();
+
+    /**
      * @return BalanceSheet
      */
     public function getBalanceSheet()
     {
         $balance = $this->getBalance();
         $transactions = $this->getTransactions();
+
+        // sort transactions by date (oldest to newest)
+        usort($transactions, function($a, $b) {
+            if ($a['date'] == $b['date']) {
+                return 0;
+            }
+
+            return ($a['date'] < $b['date']) ? -1 : 1;
+        });
 
         $transactionTotal = 0;
         foreach ($transactions as $transaction) {
@@ -55,28 +84,6 @@ abstract class AbstractChecker
 
         return $balanceSheet;
     }
-
-
-    /**
-     * @return Symfony\Component\DomCrawler\Crawler
-     */
-    abstract protected function getDom();
-
-    /**
-     * @return float
-     */
-    abstract protected function getBalance();
-
-    /**
-     * array['transactions']
-     *         ['date']   DateTime
-     *         ['desc']   string
-     *         ['amount'] float
-     *
-     * @return array
-     */
-    abstract protected function getTransactions();
-
 
     /**
      * @param  string $amount

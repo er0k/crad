@@ -11,54 +11,8 @@ class VanillaVisa extends AbstractChecker
     const URL = 'https://www.onevanilla.com';
 
     /**
-     * @return float
-     */
-    protected function getBalance()
-    {
-        $domBalance = $this->dom->filter('#Avlbal')->text();
-
-        return $this->cleanAmount($domBalance);
-    }
-
-    /**
-     * @return array
-     */
-    protected function getTransactions()
-    {
-        $transactions = [];
-
-        $this->dom->filter('.txnStripe')->each(function ($node, $i) use (&$transactions) {
-            $domDate = $node->filter('.txnDate')->text();
-            $domDesc = $node->filter('.txnDesc')->text();
-
-            $transactions[$i]['date'] = $this->cleanDate($domDate);
-            $transactions[$i]['desc'] = $this->cleanDescription($domDesc);
-
-            // sometimes there are multiple amounts for some reason
-            // get the one that's not empty
-            $node->filter('.txnAmount')->each(function ($innerNode) use ($i, &$transactions) {
-                $domAmount = trim($innerNode->text());
-                if (!empty($domAmount)) {
-                    $transactions[$i]['amount'] = $this->cleanAmount($domAmount);
-                    return;
-                }
-            });
-        });
-
-        // sort by date
-        usort($transactions, function($a, $b) {
-            if ($a['date'] == $b['date']) {
-                return 0;
-            }
-
-            return ($a['date'] < $b['date']) ? -1 : 1;
-        });
-
-        return $transactions;
-    }
-
-    /**
      * @return Symfony\Component\DomCrawler\Crawler
+     * @throws BalanceCheckerException
      */
     protected function getDom()
     {
@@ -82,10 +36,57 @@ class VanillaVisa extends AbstractChecker
         ]);
 
         if (!$dom->filter('.SSaccountTitle')->count()) {
-            throw new BalanceCheckerException("Wrong credentials. Cannot check balance");
+            throw new BalanceCheckerException("Wrong credentials");
         }
 
         return $dom;
     }
 
+    /**
+     * @return float
+     * @throws BalanceCheckerException
+     */
+    protected function getBalance()
+    {
+        if (!$this->dom) {
+            throw new BalanceCheckerException("No DOM");
+        }
+
+        $domBalance = $this->dom->filter('#Avlbal')->text();
+
+        return $this->cleanAmount($domBalance);
+    }
+
+    /**
+     * @return array
+     * @throws BalanceCheckerException
+     */
+    protected function getTransactions()
+    {
+        if (!$this->dom) {
+            throw new BalanceCheckerException("No DOM");
+        }
+
+        $transactions = [];
+
+        $this->dom->filter('.txnStripe')->each(function ($node, $i) use (&$transactions) {
+            $domDate = $node->filter('.txnDate')->text();
+            $domDesc = $node->filter('.txnDesc')->text();
+
+            $transactions[$i]['date'] = $this->cleanDate($domDate);
+            $transactions[$i]['desc'] = $this->cleanDescription($domDesc);
+
+            // sometimes there are multiple amounts for some reason
+            // get the one that's not empty
+            $node->filter('.txnAmount')->each(function ($innerNode) use ($i, &$transactions) {
+                $domAmount = trim($innerNode->text());
+                if (!empty($domAmount)) {
+                    $transactions[$i]['amount'] = $this->cleanAmount($domAmount);
+                    return;
+                }
+            });
+        });
+
+        return $transactions;
+    }
 }
