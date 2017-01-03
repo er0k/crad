@@ -34,6 +34,8 @@ class BalanceChecker
         $number = $card->getNumber();
 
         switch ($number) {
+            case preg_match('|^43[0-9]{11}(?:[0-9]{3})?$|', $number) === 1:
+                return new BalanceChecker\GiftCardMall($card);
             case preg_match('|^4[0-9]{12}(?:[0-9]{3})?$|', $number) === 1:
                 return new BalanceChecker\VanillaVisa($card);
             default:
