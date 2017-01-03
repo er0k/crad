@@ -10,6 +10,8 @@ class GiftCardMall extends AbstractChecker
 {
     const URL = 'https://mygift.giftcardmall.com/Card/Login?returnURL=Transactions';
 
+    private $client;
+
     /**
      * @return Symfony\Component\DomCrawler\Crawler
      * @throws BalanceCheckerException
@@ -20,16 +22,16 @@ class GiftCardMall extends AbstractChecker
             return $this->dom;
         }
 
-        $client = new Client();
+        $this->client = new Client();
 
         if (!empty($this->ua)) {
-            $client->setHeader('user-agent', $this->ua);
+            $this->client->setHeader('user-agent', $this->ua);
         }
 
-        $dom = $client->request('GET', self::URL);
+        $dom = $this->client->request('GET', self::URL);
 
         $form = $dom->selectButton('Next')->form();
-        $dom = $client->submit($form, [
+        $dom = $this->client->submit($form, [
             'CardNumber' => $this->card->getNumber(),
             'ExpirationMonth' => $this->card->getMonth(),
             'ExpirationYear' => $this->card->getYear(),
@@ -56,8 +58,6 @@ class GiftCardMall extends AbstractChecker
         // #main > section.primaryLeft.box > div > table > tbody > tr > td:nth-child(3) > h5
         $domBalance = $this->dom->filter('table.bd-wizard-account-header td:nth-child(3) > h5')->text();
 
-        print_r(compact('domBalance'));
-
         return $this->cleanAmount($domBalance);
     }
 
@@ -71,27 +71,28 @@ class GiftCardMall extends AbstractChecker
             throw new BalanceCheckerException("No DOM");
         }
 
-        return [];
+        $today = new \DateTime();
+
+        $form = $this->dom->selectButton('Search')->form();
+        $this->dom = $this->client->submit($form, [
+            'DateFrom' => '1/1/2001',
+            'DateTo' => $today->format('n/j/Y'),
+        ]);
 
         $transactions = [];
 
-        $this->dom->filter('.txnStripe')->each(function ($node, $i) use (&$transactions) {
-            $domDate = $node->filter('.txnDate')->text();
-            $domDesc = $node->filter('.txnDesc')->text();
+        $this->dom->filter('#TransactionsGrid table')->filter('tr.t-master-row')->each(function ($node, $i) use (&$transactions) {
+            echo $i . "\n";
+            // #TransactionsGrid > table > tbody > tr:nth-child(1) > td:nth-child(2)
+            $domDate = $node->filter('td:nth-child(2)')->text();
+            $domDesc = $node->filter('td:nth-child(4)')->text();
+            $domAmount = $node->filter('td:nth-child(5)')->text();
 
             $transactions[$i]['date'] = $this->cleanDate($domDate);
             $transactions[$i]['desc'] = $this->cleanDescription($domDesc);
-
-            // sometimes there are multiple amounts for some reason
-            // get the one that's not empty
-            $node->filter('.txnAmount')->each(function ($innerNode) use ($i, &$transactions) {
-                $domAmount = trim($innerNode->text());
-                if (!empty($domAmount)) {
-                    $transactions[$i]['amount'] = $this->cleanAmount($domAmount);
-                    return;
-                }
-            });
+            $transactions[$i]['amount'] = $this->cleanAmount($domAmount);
         });
+
 
         return $transactions;
     }
