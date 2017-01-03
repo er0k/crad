@@ -15,14 +15,13 @@ class EncryptedStorage
     /** @var meedo */
     private $db;
 
-    const KEY_FILE = '/home/er0k/.www/cradkey';
     const DB_FILE = 'data/crad.db';
     const CARDS_TABLE = 'cards';
     const SHEETS_TABLE = 'sheets';
 
-    public function __construct()
+    public function __construct(array $config)
     {
-        $this->key = file_get_contents(self::KEY_FILE);
+        $this->key = file_get_contents($config['keyfile']);
         $this->db = $this->getDb();
     }
 

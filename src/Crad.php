@@ -33,9 +33,9 @@ class Crad
     /** @var BalanceSheet */
     private $storedBalanceSheet;
 
-    public function __construct()
+    public function __construct(array $config)
     {
-        $this->storage = new EncryptedStorage();
+        $this->storage = new EncryptedStorage($config);
         $this->reader = new Reader();
     }
 

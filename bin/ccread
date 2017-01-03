@@ -3,10 +3,13 @@
 
 chdir(dirname(__DIR__));
 setlocale(LC_MONETARY, 'en_US');
+ini_set('date.timezone', 'America/New_York');
 
 require 'vendor/autoload.php';
 
-$crad = new Crad();
+$config = include 'config/config.php';
+
+$crad = new Crad($config);
 while (true) {
     $crad->run();
 }
