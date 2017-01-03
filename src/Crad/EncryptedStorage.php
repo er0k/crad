@@ -94,6 +94,38 @@ class EncryptedStorage
     }
 
     /**
+     * @return int | false
+     */
+    public function countCards()
+    {
+        return $this->db->count(self::CARDS_TABLE);
+    }
+
+    /**
+     * @return int | false
+     */
+    public function countBalanceSheets()
+    {
+        return $this->db->count(self::SHEETS_TABLE);
+    }
+
+    /**
+     * @return array | false
+     */
+    public function getCardIds()
+    {
+        return $this->db->select(self::CARDS_TABLE, 'id');
+    }
+
+    /**
+     * @return array | false
+     */
+    public function getBalanceSheetIds()
+    {
+        return $this->db->select(self::SHEETS_TABLE, 'id');
+    }
+
+    /**
      * @param string $table
      * @throws EncryptedStorageException
      */

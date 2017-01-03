@@ -130,6 +130,11 @@ abstract class AbstractChecker
         return $ua;
     }
 
+    /**
+     * @param  string $a
+     * @param  string $b
+     * @return bool
+     */
     private function isEqual($a, $b)
     {
         if (bccomp("$a", "$b", 3) === 0) {

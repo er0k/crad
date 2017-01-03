@@ -7,7 +7,6 @@ class Reader
     /** @var Card */
     private $card;
 
-
     /**
      * @param Card | null $card
      */
@@ -32,55 +31,80 @@ class Reader
 
     /**
      * @param  string $input
-     * @return void
+     * @return string | null
      */
     public function read($input = '')
     {
-        $this->readInput($input)
-            ->setCardData();
+        $input = trim($input);
+
+        $input = $this->readCard($input);
+        $input = $this->readCvv($input);
+
+        $this->setCardData();
+
+        return $this->readCommand($input);
     }
 
     /**
      * @param string $input
-     * @return Card
+     * @return string | null
      */
-    private function readInput($input)
+    private function readCard($input)
     {
+        if (!$input) {
+            return null;
+        }
+
         foreach ([1,2] as $trackNum) {
             if (
                 ($data = $this->card->isTrack($trackNum, $input))
                 && !$this->hasAllTracks()
             ) {
                 $this->addTrackData($trackNum, $data);
-                $input = '';
+
+                return null;
             }
         }
 
-        if (!empty($input)) {
-            $this->parseExtraInput($input);
-        }
-
-        return $this;
+        return $input;
     }
 
     /**
      * @param  string $input
-     * @return Card
+     * @return string | null
      */
-    private function parseExtraInput($input)
+    private function readCommand($input)
     {
-        $input = trim($input);
-
-        if (strlen($input) == 3 && is_numeric($input)) {
-            $this->card->setCvv($input);
+        if (!$input) {
+            return null;
         }
 
-        return $this;
+        if (substr($input, 0, 1) === "!") {
+            return substr_replace($input, '', 0, 1);
+        }
+
+        throw new ReaderException("Could not read input");
     }
 
     /**
-     * @return Card
+     * @param  string $input
+     * @return string | null
      */
+    private function readCvv($input)
+    {
+        if (!$input) {
+            return null;
+        }
+
+        if (strlen($input) == 3 && is_numeric($input)) {
+            $this->card->setCvv($input);
+
+            return null;
+        }
+
+        return $input;
+    }
+
     private function setCardData()
     {
         $this->card->setNumber($this->card->getNumber());
@@ -88,8 +112,6 @@ class Reader
         $this->card->setCvv($this->card->getCvv());
         $this->card->setName($this->card->getName());
         $this->card->setHash($this->card->getHash());
-
-        return $this;
     }
 
     /**
@@ -116,5 +138,4 @@ class Reader
 
         $this->card->setTrack($num, $data);
     }
-
 }

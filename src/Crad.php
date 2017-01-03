@@ -4,6 +4,7 @@ use Crad\BalanceChecker;
 use Crad\BalanceCheckerException;
 use Crad\BalanceSheet;
 use Crad\BalanceSheetException;
+use Crad\Analyzer;
 use Crad\Card;
 use Crad\CardException;
 use Crad\EncryptedStorage;
@@ -34,8 +35,8 @@ class Crad
 
     public function __construct()
     {
-        $this->reader = new Reader();
         $this->storage = new EncryptedStorage();
+        $this->reader = new Reader();
     }
 
     public function run()
@@ -62,6 +63,8 @@ class Crad
             $this->handleError($bse);
         } catch (EncryptedStorableException $ese) {
             $this->handleError($ese);
+        } catch (BalanceCheckerException $bce) {
+            $this->handleError($bce);
         }
     }
 
@@ -90,10 +93,29 @@ class Crad
 
         // read from STDIN until ctrl+d or empty line
         while ($line = CliPrompt::hiddenPrompt()) {
-            $this->reader->read($line);
+            $command = $this->reader->read($line);
+            if ($command) {
+                $this->execute($command);
+            }
         }
 
         return $this;
+    }
+
+    private function execute($cmd)
+    {
+        switch ($cmd) {
+            case 'quit':
+            case 'q':
+                die("Bye\n");
+            case 'total':
+            case 't':
+                $this->calculateTotal();
+                break;
+            default:
+                echo "$cmd command not yet implemented\n";
+                break;
+        }
     }
 
     /**
@@ -200,6 +222,19 @@ class Crad
         $this->balanceSheet = $checker->getBalanceSheet();
 
         $this->balanceSheet->showInfo();
+    }
+
+    private function calculateTotal()
+    {
+        echo 'calculating total...';
+
+        $anal = new Analyzer($this->storage);
+
+        $total = $anal->getTotal();
+
+        echo $total;
+
+        echo "\n";
     }
 
     /**
