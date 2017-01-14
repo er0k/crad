@@ -1,0 +1,6 @@
+<?php
+
+return [
+    'keyfile' => '/home/user/cradkey',
+    'dbfile' => 'data/crad.db',
+];
