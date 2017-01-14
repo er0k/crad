@@ -1,1 +1,6 @@
+config/config.php
+
+data/*
+!data/.gitkeep
+
 vendor/*
