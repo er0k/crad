@@ -15,14 +15,16 @@ class EncryptedStorage
     /** @var meedo */
     private $db;
 
-    const DB_FILE = 'data/crad.db';
     const CARDS_TABLE = 'cards';
     const SHEETS_TABLE = 'sheets';
 
-    public function __construct(array $config)
+    /**
+     * @param Config $config
+     */
+    public function __construct(Config $config)
     {
-        $this->key = file_get_contents($config['keyfile']);
-        $this->db = $this->getDb();
+        $this->key = file_get_contents($config->keyfile);
+        $this->db = $this->getDb($config->dbfile);
     }
 
     /**
@@ -234,9 +236,10 @@ class EncryptedStorage
     }
 
     /**
+     * @param string $dbFile path to sqlite database file
      * @return medoo
      */
-    private function getDb()
+    private function getDb($dbFile)
     {
         if ($this->db) {
             return $this->db;
@@ -244,23 +247,24 @@ class EncryptedStorage
 
         return new medoo([
             'database_type' => 'sqlite',
-            'database_file' => $this->getDbFile()
+            'database_file' => $this->getDbFile($dbFile)
         ]);
     }
 
     /**
+     * @param string $dbFile
      * @return string
      */
-    private function getDbFile()
+    private function getDbFile($dbFile)
     {
-        if (!is_file(self::DB_FILE)) {
-            touch(self::DB_FILE);
+        if (!is_file($dbFile)) {
+            touch($dbFile);
         }
 
-        if (!is_writable(self::DB_FILE)) {
+        if (!is_writable($dbFile)) {
             throw new EncryptedStorageException("Can't write to database");
         }
 
-        return self::DB_FILE;
+        return $dbFile;
     }
 }

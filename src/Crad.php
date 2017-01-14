@@ -1,12 +1,13 @@
 <?php
 
+use Crad\Analyzer;
 use Crad\BalanceChecker;
 use Crad\BalanceCheckerException;
 use Crad\BalanceSheet;
 use Crad\BalanceSheetException;
-use Crad\Analyzer;
 use Crad\Card;
 use Crad\CardException;
+use Crad\Config;
 use Crad\EncryptedStorage;
 use Crad\EncryptedStorageException;
 use Crad\Reader;
@@ -15,6 +16,8 @@ use Seld\CliPrompt\CliPrompt;
 
 class Crad
 {
+    private $config;
+
     /** @var Reader */
     private $reader;
 
@@ -33,9 +36,10 @@ class Crad
     /** @var BalanceSheet */
     private $storedBalanceSheet;
 
-    public function __construct(array $config)
+    public function __construct()
     {
-        $this->storage = new EncryptedStorage($config);
+        $this->config = new Config();
+        $this->storage = new EncryptedStorage($this->config);
         $this->reader = new Reader();
     }
 
