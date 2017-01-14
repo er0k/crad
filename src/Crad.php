@@ -204,10 +204,11 @@ class Crad
             $this->checkBalance();
         }
 
-        if ($this->balanceSheet->hasAllData()) {
-            if ($this->balanceSheet->hasChanged($this->storedBalanceSheet)) {
-                $this->storage->update($this->balanceSheet);
-            }
+        if (
+            $this->balanceSheet->hasAllData()
+            && $this->balanceSheet->hasChanged($this->storedBalanceSheet)
+        ) {
+            $this->storage->update($this->balanceSheet);
         }
 
         return $this;
