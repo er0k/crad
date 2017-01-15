@@ -51,35 +51,12 @@ abstract class AbstractChecker
     /**
      * @return BalanceSheet
      */
-    public function getBalanceSheet()
+    public function makeBalanceSheet()
     {
-        $balance = $this->getBalance();
-        $transactions = $this->getTransactions();
-
-        // sort transactions by date (oldest to newest)
-        usort($transactions, function($a, $b) {
-            if ($a['date'] == $b['date']) {
-                return 0;
-            }
-
-            return ($a['date'] < $b['date']) ? -1 : 1;
-        });
-
-        $transactionTotal = 0;
-        foreach ($transactions as $transaction) {
-            $transactionTotal += $transaction['amount'];
-        }
-
-        if (!$this->isEqual($transactionTotal, $balance)) {
-            throw new BalanceCheckerException(
-                "Transaction total ($transactionTotal) does not match current balance ($balance)"
-            );
-        }
-
         $balanceSheet = new BalanceSheet();
 
-        $balanceSheet->setBalance($balance);
-        $balanceSheet->setTransactions($transactions);
+        $balanceSheet->setBalance($this->getBalance());
+        $balanceSheet->setTransactions($this->getTransactions());
         $balanceSheet->setHash($this->card->getHash());
 
         return $balanceSheet;
@@ -128,19 +105,5 @@ abstract class AbstractChecker
         }
 
         return $ua;
-    }
-
-    /**
-     * @param  string $a
-     * @param  string $b
-     * @return bool
-     */
-    private function isEqual($a, $b)
-    {
-        if (bccomp("$a", "$b", 3) === 0) {
-            return true;
-        }
-
-        return false;
     }
 }

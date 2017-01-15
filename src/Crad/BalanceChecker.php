@@ -20,9 +20,7 @@ class BalanceChecker
      */
     public function getBalanceSheet()
     {
-        $balanceSheet = $this->checker->getBalanceSheet();
-
-        return $balanceSheet;
+        return $this->checker->makeBalanceSheet();
     }
 
     /**
@@ -41,5 +39,47 @@ class BalanceChecker
             default:
                 throw new BalanceCheckerException("Card type not implemented");
         }
+    }
+
+    /**
+     * @param  float $balance
+     * @param  array $transactions
+     */
+    public function compareBalanceToTransactionTotal(BalanceSheet $balanceSheet)
+    {
+        $balance = $balanceSheet->getBalance();
+        $transactions = $balanceSheet->getTransactions();
+
+        // sort transactions by date (oldest to newest)
+        usort($transactions, function($a, $b) {
+            if ($a['date'] == $b['date']) {
+                return 0;
+            }
+
+            return ($a['date'] < $b['date']) ? -1 : 1;
+        });
+
+        $transactionTotal = 0;
+        foreach ($transactions as $transaction) {
+            $transactionTotal += $transaction['amount'];
+        }
+
+        if (!$this->isEqual($transactionTotal, $balance)) {
+            echo "Transaction total ($transactionTotal) does not match current balance ($balance)\n";
+        }
+    }
+
+    /**
+     * @param  string $a
+     * @param  string $b
+     * @return bool
+     */
+    private function isEqual($a, $b)
+    {
+        if (bccomp("$a", "$b", 3) === 0) {
+            return true;
+        }
+
+        return false;
     }
 }

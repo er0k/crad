@@ -226,6 +226,8 @@ class Crad
 
         $this->balanceSheet = $checker->getBalanceSheet();
 
+        $checker->compareBalanceToTransactionTotal($this->balanceSheet);
+
         $this->balanceSheet->showInfo();
     }
 

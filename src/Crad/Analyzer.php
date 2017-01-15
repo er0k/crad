@@ -62,7 +62,7 @@ class Analyzer
             foreach ($diff as $cardId) {
                 $card = $this->storage->findCard($cardId);
                 // $checker = new BalanceChecker($card);
-                // $sheet = $checker->getBalanceSheet();
+                // $sheet = $checker->makeBalanceSheet();
                 // $sheet->showInfo();
             }
         }
