@@ -46,6 +46,35 @@ class Card implements \JsonSerializable, EncryptedStorable
         return $this;
     }
 
+    public function checkDate()
+    {
+        if (!$this->hasDate()) {
+            return;
+        }
+
+        $date = \DateTime::createFromFormat('ym', $this->getDate());
+        $diff = $date->diff(new \DateTime());
+
+        $years = $diff->format('%y');
+        $months = $diff->format('%m');
+
+        $expiresInMonths = ($years * 12) + $months;
+
+        if ($expiresInMonths > 1) {
+            echo "this card expires in $expiresInMonths months\n";
+        }
+
+        if ($expiresInMonths < 1 && $expiresInMonths > 0) {
+            echo "this card is about to expire!\n";
+        }
+
+        if ($expiresInMonths < 0) {
+            echo "this card expired " . abs($expiresInMonths) . " months ago\n";
+        }
+
+        return $this;
+    }
+
     /**
      * @return bool
      */

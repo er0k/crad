@@ -109,12 +109,24 @@ class Crad
     private function execute($cmd)
     {
         switch ($cmd) {
+            case 'help':
+            case 'h':
+                $this->showHelp();
+                break;
             case 'quit':
             case 'q':
                 die("Bye\n");
             case 'total':
             case 't':
                 $this->calculateTotal();
+                break;
+            case 'new':
+            case 'n':
+                $this->initialize(true);
+                break;
+            case 'show':
+            case 's':
+                $this->card->showInfo();
                 break;
             default:
                 echo "$cmd command not yet implemented\n";
@@ -143,7 +155,11 @@ class Crad
      */
     private function handleCard()
     {
-        $this->card->showInfo();
+        if ($this->card->hasAllData()) {
+            $this->card->showInfo();
+        }
+
+        $this->card->checkDate();
 
         if ($this->findStoredCard()) {
             return $this->handleStoredCard();

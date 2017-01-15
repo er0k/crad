@@ -80,7 +80,7 @@ class Reader
         }
 
         if (substr($input, 0, 1) === "!") {
-            return substr_replace($input, '', 0, 1);
+            return strtolower(substr_replace($input, '', 0, 1));
         }
 
         throw new ReaderException("Could not read input");
