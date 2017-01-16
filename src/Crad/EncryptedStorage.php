@@ -21,8 +21,12 @@ class EncryptedStorage
     /**
      * @param Config $config
      */
-    public function __construct(Config $config)
+    public function __construct(Config $config = null)
     {
+        if (!$config) {
+            $config = new Config();
+        }
+
         $this->key = file_get_contents($config->keyfile);
         $this->db = $this->getDb($config->dbfile);
     }
