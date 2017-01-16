@@ -158,7 +158,7 @@ class EncryptedStorage
      */
     private function find($table, $id)
     {
-        echo "finding in {$table}...";
+        #echo "finding in {$table}...";
 
         $storedData = $this->db->get($table,
             ['id', 'data'],

@@ -25,7 +25,7 @@ class Analyzer
             $sheet = $this->storage->findBalanceSheet($id);
             $balance = $sheet->getBalance();
 
-            print_r(compact('balance', 'id'));
+            #print_r(compact('balance', 'id'));
 
             $total += $balance;
         }
@@ -56,11 +56,12 @@ class Analyzer
 
         $diff = array_diff($cardIds, $sheetIds);
 
-        print_r(compact('cardIds', 'sheetIds', 'diff'));
+        #print_r(compact('cardIds', 'sheetIds', 'diff'));
 
         if (!empty($diff)) {
             foreach ($diff as $cardId) {
                 $card = $this->storage->findCard($cardId);
+                #print_r($card);
                 // $checker = new BalanceChecker($card);
                 // $sheet = $checker->makeBalanceSheet();
                 // $sheet->showInfo();

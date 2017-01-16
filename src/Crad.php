@@ -78,10 +78,9 @@ class Crad
     private function initialize($forceNew = false)
     {
         if ($this->shouldGetNewCard() || $forceNew) {
-            echo "\n----- new card -----\n";
             $this->card = new Card();
             $this->storedCard = null;
-            $this->balanceSheet = null;
+            $this->balanceSheet = new BalanceSheet();
             $this->storedBalanceSheet = null;
         }
     }
@@ -95,11 +94,13 @@ class Crad
     {
         $this->reader->setCard($this->card);
 
+        echo "crad$ ";
+
         // read from STDIN until ctrl+d or empty line
         while ($line = CliPrompt::hiddenPrompt()) {
             $command = $this->reader->read($line);
             if ($command) {
-                $this->execute($command);
+                return $this->execute($command);
             }
         }
 
@@ -111,7 +112,7 @@ class Crad
         switch ($cmd) {
             case 'help':
             case 'h':
-                $this->showHelp();
+                return $this->showHelp();
                 break;
             case 'quit':
             case 'q':
@@ -124,14 +125,30 @@ class Crad
             case 'n':
                 $this->initialize(true);
                 break;
+            case 'count':
+            case 'c':
+                $this->count();
+                break;
             case 'show':
             case 's':
                 $this->card->showInfo();
+                $this->balanceSheet->showInfo();
                 break;
             default:
                 echo "$cmd command not yet implemented\n";
                 break;
         }
+    }
+
+    private function showHelp()
+    {
+        echo "commands:\n";
+        echo "!help\tshow this message\n";
+        echo "!quit\texit\n";
+        echo "!total\ttotal up all balances\n";
+        echo "!count\tcount all the cards and balance sheets\n";
+        echo "!show\tshow info of current card and balance sheet\n";
+        echo "\n";
     }
 
     /**
@@ -204,8 +221,6 @@ class Crad
             if ($this->balanceSheet->hasAllData()) {
                 $this->storage->insert($this->balanceSheet);
             }
-        } else {
-            echo "can't check balance: missing card data\n";
         }
 
         return $this;
@@ -257,14 +272,14 @@ class Crad
 
         $total = $anal->getTotal();
 
-        echo $total;
-
-        echo "\n";
+        echo money_format('$%i', $total) . "\n";
     }
 
-    private function showHelp()
+    private function count()
     {
-        echo "we all need help\n";
+        $anal = new Analyzer($this->storage);
+
+        $anal->countCardsAndSheets();
     }
 
     /**
@@ -274,12 +289,6 @@ class Crad
     {
         if (!$this->storedCard) {
             $this->storedCard = $this->storage->findCard($this->card->getHash());
-        }
-
-        if ($this->storedCard) {
-            echo "got card from storage\n";
-        } else {
-            echo "card not stored\n";
         }
 
         return $this->storedCard;
@@ -292,12 +301,6 @@ class Crad
     {
         if (!$this->storedBalanceSheet) {
             $this->storedBalanceSheet = $this->storage->findBalanceSheet($this->card->getHash());
-        }
-
-        if ($this->storedBalanceSheet) {
-            echo "got balance sheet from storage\n";
-        } else {
-            echo "balance sheet not stored\n";
         }
 
         return $this->storedBalanceSheet;

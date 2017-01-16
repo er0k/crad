@@ -82,7 +82,7 @@ class GiftCardMall extends AbstractChecker
         $transactions = [];
 
         $this->dom->filter('#TransactionsGrid table')->filter('tr.t-master-row')->each(function ($node, $i) use (&$transactions) {
-            echo $i . "\n";
+            #echo $i . "\n";
             // #TransactionsGrid > table > tbody > tr:nth-child(1) > td:nth-child(2)
             $domDate = $node->filter('td:nth-child(2)')->text();
             $domDesc = $node->filter('td:nth-child(4)')->text();
