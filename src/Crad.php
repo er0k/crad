@@ -204,6 +204,8 @@ class Crad
             if ($this->balanceSheet->hasAllData()) {
                 $this->storage->insert($this->balanceSheet);
             }
+        } else {
+            echo "can't check balance: missing card data\n";
         }
 
         return $this;
@@ -258,6 +260,11 @@ class Crad
         echo $total;
 
         echo "\n";
+    }
+
+    private function showHelp()
+    {
+        echo "we all need help\n";
     }
 
     /**

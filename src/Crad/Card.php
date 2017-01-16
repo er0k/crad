@@ -85,6 +85,7 @@ class Card implements \JsonSerializable, EncryptedStorable
         }
 
         if (!$this->hasTrack(2)) {
+            echo "missing track 2. Rescan card\n";
             return false;
         }
 
