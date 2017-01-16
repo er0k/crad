@@ -113,30 +113,26 @@ class Crad
             case 'help':
             case 'h':
                 return $this->showHelp();
-                break;
             case 'quit':
             case 'q':
                 die("Bye\n");
             case 'total':
             case 't':
-                $this->calculateTotal();
-                break;
+                return $this->calculateTotal();
             case 'new':
             case 'n':
-                $this->initialize(true);
-                break;
+                return $this->initialize(true);
             case 'count':
             case 'c':
-                $this->count();
-                break;
+                return $this->count();
             case 'show':
             case 's':
                 $this->card->showInfo();
                 $this->balanceSheet->showInfo();
-                break;
+                return;
             default:
                 echo "$cmd command not yet implemented\n";
-                break;
+                return;
         }
     }
 
