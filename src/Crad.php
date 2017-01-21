@@ -7,6 +7,7 @@ use Crad\BalanceSheet;
 use Crad\BalanceSheetException;
 use Crad\Card;
 use Crad\CardException;
+use Crad\Commander;
 use Crad\Config;
 use Crad\EncryptedStorage;
 use Crad\EncryptedStorageException;
@@ -38,6 +39,7 @@ class Crad
     {
         $this->storage = new EncryptedStorage();
         $this->reader = new Reader();
+        $this->commander = new Commander($this);
     }
 
     public function run()
@@ -72,7 +74,7 @@ class Crad
     /**
      * @param  bool $forceNew
      */
-    private function initialize($forceNew = false)
+    public function initialize($forceNew = false)
     {
         if ($this->shouldGetNewCard() || $forceNew) {
             $this->card = new Card();
@@ -80,6 +82,30 @@ class Crad
             $this->balanceSheet = new BalanceSheet();
             $this->storedBalanceSheet = null;
         }
+    }
+
+    /**
+     * @return Card
+     */
+    public function getCard()
+    {
+        return $this->card;
+    }
+
+    /**
+     * @return BalanceSheet
+     */
+    public function getBalanceSheet()
+    {
+        return $this->balanceSheet;
+    }
+
+    /**
+     * @return EncryptedStorage
+     */
+    public function getStorage()
+    {
+        return $this->storage;
     }
 
     /**
@@ -97,57 +123,11 @@ class Crad
         while ($line = CliPrompt::hiddenPrompt()) {
             $command = $this->reader->read($line);
             if ($command) {
-                return $this->execute($command);
+                return $this->commander->execute($command);
             }
         }
 
         return $this;
-    }
-
-    private function execute($cmd)
-    {
-        switch ($cmd) {
-            case 'help':
-            case 'h':
-                return $this->showHelp();
-            case 'quit':
-            case 'q':
-                die("Bye\n");
-            case 'total':
-            case 't':
-                return $this->calculateTotal();
-            case 'new':
-            case 'n':
-                return $this->initialize(true);
-            case 'count':
-            case 'c':
-                return $this->count();
-            case 'show':
-            case 's':
-                $this->card->showInfo();
-                $this->balanceSheet->showInfo();
-                return;
-            case 'break':
-                // this command will get returned from the reader if it has read
-                // a card track or a CVV. it's only here to help break out of the
-                // main loop of parsing input, and allow card data to get pushed
-                // into the program without having to hit Enter each time
-                return;
-            default:
-                echo "$cmd command not yet implemented\n";
-                return;
-        }
-    }
-
-    private function showHelp()
-    {
-        echo "commands:\n";
-        echo "!help\tshow this message\n";
-        echo "!quit\texit\n";
-        echo "!total\ttotal up all balances\n";
-        echo "!count\tcount all the cards and balance sheets\n";
-        echo "!show\tshow info of current card and balance sheet\n";
-        echo "\n";
     }
 
     /**
@@ -261,24 +241,6 @@ class Crad
         $this->balanceSheet->showInfo();
     }
 
-    private function calculateTotal()
-    {
-        echo 'calculating total...';
-
-        $anal = new Analyzer($this->storage);
-
-        $total = $anal->getTotal();
-
-        echo money_format('$%i', $total) . "\n";
-    }
-
-    private function count()
-    {
-        $anal = new Analyzer($this->storage);
-
-        $anal->countCardsAndSheets();
-    }
-
     /**
      * @return Card | null
      */
@@ -303,7 +265,10 @@ class Crad
         return $this->storedBalanceSheet;
     }
 
-    private function handleError($error)
+    /**
+     * @param  Exception $error
+     */
+    private function handleError(Exception $error)
     {
         echo $error->getMessage();
         echo "\n";
