@@ -16,8 +16,6 @@ use Seld\CliPrompt\CliPrompt;
 
 class Crad
 {
-    private $config;
-
     /** @var Reader */
     private $reader;
 
@@ -38,8 +36,7 @@ class Crad
 
     public function __construct()
     {
-        $this->config = new Config();
-        $this->storage = new EncryptedStorage($this->config);
+        $this->storage = new EncryptedStorage();
         $this->reader = new Reader();
     }
 
