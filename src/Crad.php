@@ -130,6 +130,8 @@ class Crad
                 $this->card->showInfo();
                 $this->balanceSheet->showInfo();
                 return;
+            case 'break':
+                return;
             default:
                 echo "$cmd command not yet implemented\n";
                 return;
@@ -168,10 +170,6 @@ class Crad
      */
     private function handleCard()
     {
-        if ($this->card->hasAllData()) {
-            $this->card->showInfo();
-        }
-
         $this->card->checkDate();
 
         if ($this->findStoredCard()) {
@@ -190,14 +188,16 @@ class Crad
      */
     private function handleStoredCard()
     {
-        $this->storedCard->showInfo();
-
         if ($this->card->hasAllData()) {
             if ($this->card->hasCardChanged($this->storedCard)) {
                 $this->storage->update($this->card);
             }
         } else {
             $this->card = $this->storedCard;
+        }
+
+        if ($this->card->hasAllData()) {
+            $this->card->showInfo();
         }
 
         return $this;
@@ -307,5 +307,6 @@ class Crad
         echo $error->getMessage();
         echo "\n";
         echo $error->getTraceAsString();
+        echo "\n";
     }
 }

@@ -61,7 +61,7 @@ class EncryptedStorage
 
         $encryptedData = $this->encrypt($data);
 
-        echo "inserting...";
+        echo "inserting...\n";
 
         return $this->db->insert($this->determineTable($data),
             ['id' => $data->getHash(), 'data' => $encryptedData]
@@ -80,7 +80,7 @@ class EncryptedStorage
 
         $encryptedData = $this->encrypt($data);
 
-        echo "updating...";
+        echo "updating...\n";
 
         return $this->db->update($this->determineTable($data),
             ['data' => $encryptedData],

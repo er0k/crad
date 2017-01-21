@@ -55,18 +55,25 @@ class Reader
             return null;
         }
 
+        if (!$this->isCardData($input)) {
+            return $input;
+        }
+
         foreach ([1,2] as $trackNum) {
             if (
                 ($data = $this->card->isTrack($trackNum, $input))
                 && !$this->hasAllTracks()
             ) {
                 $this->addTrackData($trackNum, $data);
-
-                return null;
+                break;
             }
         }
 
-        return $input;
+        if ($this->hasAllTracks()) {
+            return '!break';
+        }
+
+        return null;
     }
 
     /**
@@ -99,7 +106,7 @@ class Reader
         if (strlen($input) == 3 && is_numeric($input)) {
             $this->card->setCvv($input);
 
-            return null;
+            return '!break';
         }
 
         return $input;
@@ -137,5 +144,24 @@ class Reader
         }
 
         $this->card->setTrack($num, $data);
+    }
+
+    /**
+     * @param  string $input
+     * @return bool
+     */
+    private function isCardData($input)
+    {
+        // track 1
+        if (substr($input, 0, 1) === "%") {
+            return true;
+        }
+
+        // track 2
+        if (substr($input, 0, 1) === ";") {
+            return true;
+        }
+
+        return false;
     }
 }
