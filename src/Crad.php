@@ -62,7 +62,7 @@ class Crad
             $this->handleBalanceSheet();
         } catch (BalanceSheetException $bse) {
             $this->handleError($bse);
-        } catch (EncryptedStorableException $ese) {
+        } catch (EncryptedStorageException $ese) {
             $this->handleError($ese);
         } catch (BalanceCheckerException $bce) {
             $this->handleError($bce);
