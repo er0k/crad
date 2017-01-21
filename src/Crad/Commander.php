@@ -59,6 +59,8 @@ class Commander
             case 'find':
             case 'f':
                 return $this->find();
+            case 'l':
+                return system('clear');
             case 'break':
                 // this command will get returned from the reader if it has read
                 // a card track or a CVV. it's only here to help break out of the
@@ -75,13 +77,16 @@ class Commander
     {
         echo "commands:\n\n";
         echo "!help\t\tshow this message\n";
-        echo "!quit\t\texit\n";
         echo "!total\t\ttotal up all balances\n";
         echo "!count\t\tcount all the cards and balance sheets\n";
         echo "!show\t\tshow info of current card and balance sheet\n";
+        echo "!new\t\tclear current card and balance sheet from memory\n";
         echo "!balance\tshow all balances of all cards\n";
         echo "!refresh\trefresh balances of all cards\n";
         echo "!find\t\tsearch for a card by number\n";
+        echo "!quit\t\texit\n";
+        echo "!l\t\tclear\n";
+
         echo "\n";
     }
 

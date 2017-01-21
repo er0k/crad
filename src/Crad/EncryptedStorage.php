@@ -80,7 +80,7 @@ class EncryptedStorage
 
         $encryptedData = $this->encrypt($data);
 
-        echo "updating...\n";
+        echo "updating...";
 
         return $this->db->update($this->determineTable($data),
             ['data' => $encryptedData],

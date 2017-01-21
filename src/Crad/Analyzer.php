@@ -2,6 +2,8 @@
 
 namespace Crad;
 
+use Seld\CliPrompt\CliPrompt;
+
 class Analyzer
 {
     /** @var EncryptedStorage */
@@ -15,6 +17,9 @@ class Analyzer
         $this->storage = $storage;
     }
 
+    /**
+     * @return float
+     */
     public function getTotal()
     {
         $sheetIds = $this->storage->getBalanceSheetIds();
@@ -25,11 +30,8 @@ class Analyzer
             $sheet = $this->storage->findBalanceSheet($id);
             $balance = $sheet->getBalance();
 
-            #print_r(compact('balance', 'id'));
-
             $total += $balance;
         }
-
 
         return $total;
     }
@@ -55,20 +57,22 @@ class Analyzer
         foreach ($cardIds as $id) {
             $card = $this->storage->findCard($id);
 
-            if ($card) {
-
-                $sheet = $this->storage->findBalanceSheet($id);
-
-                if ($sheet) {
-                    if ($sheet->getBalance() == 0) {
-                        continue;
-                    }
-                    $card->showInfo();
-                    $sheet->showInfo();
-                } else {
-                    echo "no balance sheet for this card\n";
-                }
+            if (!$card) {
+                continue;
             }
+
+            $sheet = $this->storage->findBalanceSheet($id);
+
+            if (!$sheet) {
+                continue;
+            }
+
+            if ($sheet->getBalance() == 0) {
+                continue;
+            }
+
+            $card->showInfo();
+            $sheet->showInfo();
 
             echo "--------------------\n";
         }
@@ -80,39 +84,40 @@ class Analyzer
 
         echo "refreshing " . count($cardIds) . " cards\n";
 
-        $i = 1;
-
-        foreach ($cardIds as $id) {
-            echo "refreshing $i...";
+        foreach ($cardIds as $key => $id) {
+            echo "refreshing $key...";
 
             $card = $this->storage->findCard($id);
 
-            if ($card) {
+            if (!$card) {
+                continue;
+            }
 
-                $storedSheet = $this->storage->findBalanceSheet($id);
+            $storedSheet = $this->storage->findBalanceSheet($id);
 
-                if ($storedSheet && $storedSheet->getBalance() == 0) {
-                    echo  "zero balance, skipping\n";
-                    $i++;
-                    continue;
+            if ($storedSheet && $storedSheet->getBalance() == 0) {
+                echo  "zero balance, skipping\n";
+                continue;
+            }
+
+            try {
+                $checker = new BalanceChecker($card);
+                $sheet = $checker->getBalanceSheet();
+                if ($sheet->hasAllData()) {
+                    $this->storage->update($sheet);
                 }
-
-                try {
-                    $checker = new BalanceChecker($card);
-                    $sheet = $checker->getBalanceSheet();
-                    if ($sheet->hasAllData()) {
-                        $this->storage->update($sheet);
-                    }
-                } catch (BalanceCheckerException $e) {
-                    echo $e->getMessage() . "\n";
-                    $card->showInfo();
-                }
+            } catch (BalanceCheckerException $e) {
+                echo $e->getMessage() . "\n";
+                $card->showInfo();
             }
             echo "done\n";
-            $i++;
         }
     }
 
+    /**
+     * @param  string $string
+     * @return Card | null
+     */
     public function search($string)
     {
         $cardIds = $this->storage->getCardIds();
@@ -125,6 +130,8 @@ class Analyzer
             }
         }
 
+        echo "not found\n";
+
         return null;
     }
 
@@ -136,15 +143,26 @@ class Analyzer
 
         $diff = array_diff($cardIds, $sheetIds);
 
-        #print_r(compact('cardIds', 'sheetIds', 'diff'));
-
         if (!empty($diff)) {
             foreach ($diff as $cardId) {
                 $card = $this->storage->findCard($cardId);
-                #print_r($card);
-                // $checker = new BalanceChecker($card);
-                // $sheet = $checker->makeBalanceSheet();
-                // $sheet->showInfo();
+                $card->showInfo();
+
+                echo "check balance?\n";
+                $reply = CliPrompt::prompt();
+                if ($reply != 'y') {
+                    continue;
+                }
+
+                try {
+                    $checker = new BalanceChecker($card);
+                    $sheet = $checker->getBalanceSheet();
+                    if ($sheet->hasAllData()) {
+                        $this->storage->update($sheet);
+                    }
+                } catch (BalanceCheckerException $e) {
+                    echo $e->getMessage() . "\n";
+                }
             }
         }
     }
