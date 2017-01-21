@@ -6,6 +6,11 @@ use Crad;
 
 class Commander
 {
+    /** @var Crad */
+    private $crad;
+
+    /** @var Analyzer */
+    private $analyzer;
 
     /**
      * @param Crad $crad
@@ -13,6 +18,7 @@ class Commander
     public function __construct(Crad $crad)
     {
         $this->crad = $crad;
+        $this->analyzer = new Analyzer($crad->getStorage());
     }
 
     /**
@@ -36,12 +42,15 @@ class Commander
                 return $this->crad->initialize(true);
             case 'count':
             case 'c':
-                return $this->count();
+                return $this->analyzer->countCardsAndSheets();
             case 'show':
             case 's':
                 $this->crad->getCard()->showInfo();
                 $this->crad->getBalanceSheet()->showInfo();
                 return;
+            case 'balance':
+            case 'b':
+                return $this->analyzer->showBalances();
             case 'break':
                 // this command will get returned from the reader if it has read
                 // a card track or a CVV. it's only here to help break out of the
@@ -62,6 +71,7 @@ class Commander
         echo "!total\ttotal up all balances\n";
         echo "!count\tcount all the cards and balance sheets\n";
         echo "!show\tshow info of current card and balance sheet\n";
+        echo "!balance\tshow all balances of all cards\n";
         echo "\n";
     }
 
@@ -69,17 +79,9 @@ class Commander
     {
         echo 'calculating total...';
 
-        $anal = new Analyzer($this->crad->getStorage());
-
-        $total = $anal->getTotal();
+        $total = $this->analyzer->getTotal();
 
         echo money_format('$%i', $total) . "\n";
     }
 
-    private function count()
-    {
-        $anal = new Analyzer($this->crad->getStorage());
-
-        $anal->countCardsAndSheets();
-    }
 }

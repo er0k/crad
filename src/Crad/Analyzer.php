@@ -48,6 +48,28 @@ class Analyzer
         }
     }
 
+    public function showBalances()
+    {
+        $cardIds = $this->storage->getCardIds();
+
+        foreach ($cardIds as $id) {
+            $card = $this->storage->findCard($id);
+
+            if ($card) {
+                $card->showInfo();
+                $sheet = $this->storage->findBalanceSheet($id);
+
+                if ($sheet) {
+                    $sheet->showInfo();
+                } else {
+                    echo "no balance sheet for this card\n";
+                }
+            }
+
+            echo "--------------------\n";
+        }
+    }
+
     private function findMissingSheets()
     {
         $cardIds = $this->storage->getCardIds();
