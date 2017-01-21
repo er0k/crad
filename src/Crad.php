@@ -131,6 +131,10 @@ class Crad
                 $this->balanceSheet->showInfo();
                 return;
             case 'break':
+                // this command will get returned from the reader if it has read
+                // a card track or a CVV. it's only here to help break out of the
+                // main loop of parsing input, and allow card data to get pushed
+                // into the program without having to hit Enter each time
                 return;
             default:
                 echo "$cmd command not yet implemented\n";
