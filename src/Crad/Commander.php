@@ -3,6 +3,8 @@
 namespace Crad;
 
 use Crad;
+use Seld\CliPrompt\CliPrompt;
+
 
 class Commander
 {
@@ -54,6 +56,9 @@ class Commander
             case 'refresh':
             case 'r':
                 return $this->analyzer->refreshBalances();
+            case 'find':
+            case 'f':
+                return $this->find();
             case 'break':
                 // this command will get returned from the reader if it has read
                 // a card track or a CVV. it's only here to help break out of the
@@ -68,13 +73,15 @@ class Commander
 
     private function showHelp()
     {
-        echo "commands:\n";
-        echo "!help\tshow this message\n";
-        echo "!quit\texit\n";
-        echo "!total\ttotal up all balances\n";
-        echo "!count\tcount all the cards and balance sheets\n";
-        echo "!show\tshow info of current card and balance sheet\n";
+        echo "commands:\n\n";
+        echo "!help\t\tshow this message\n";
+        echo "!quit\t\texit\n";
+        echo "!total\t\ttotal up all balances\n";
+        echo "!count\t\tcount all the cards and balance sheets\n";
+        echo "!show\t\tshow info of current card and balance sheet\n";
         echo "!balance\tshow all balances of all cards\n";
+        echo "!refresh\trefresh balances of all cards\n";
+        echo "!find\t\tsearch for a card by number\n";
         echo "\n";
     }
 
@@ -85,6 +92,21 @@ class Commander
         $total = $this->analyzer->getTotal();
 
         echo money_format('$%i', $total) . "\n";
+    }
+
+    private function find()
+    {
+        echo "search for card number: ";
+        $searchFor = CliPrompt::prompt();
+
+        /** @var Card | null */
+        $result = $this->analyzer->search($searchFor);
+
+        if ($result) {
+            echo "found card\n";
+            $result->showInfo();
+            $this->crad->setCard($result);
+        }
     }
 
 }

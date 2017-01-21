@@ -92,6 +92,11 @@ class Crad
         return $this->card;
     }
 
+    public function setCard(Card $card)
+    {
+        $this->card = $card;
+    }
+
     /**
      * @return BalanceSheet
      */

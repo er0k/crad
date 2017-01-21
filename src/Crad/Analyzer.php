@@ -56,10 +56,14 @@ class Analyzer
             $card = $this->storage->findCard($id);
 
             if ($card) {
-                $card->showInfo();
+
                 $sheet = $this->storage->findBalanceSheet($id);
 
                 if ($sheet) {
+                    if ($sheet->getBalance() == 0) {
+                        continue;
+                    }
+                    $card->showInfo();
                     $sheet->showInfo();
                 } else {
                     echo "no balance sheet for this card\n";
@@ -85,6 +89,14 @@ class Analyzer
 
             if ($card) {
 
+                $storedSheet = $this->storage->findBalanceSheet($id);
+
+                if ($storedSheet && $storedSheet->getBalance() == 0) {
+                    echo  "zero balance, skipping\n";
+                    $i++;
+                    continue;
+                }
+
                 try {
                     $checker = new BalanceChecker($card);
                     $sheet = $checker->getBalanceSheet();
@@ -99,6 +111,21 @@ class Analyzer
             echo "done\n";
             $i++;
         }
+    }
+
+    public function search($string)
+    {
+        $cardIds = $this->storage->getCardIds();
+
+        foreach ($cardIds as $id) {
+            $card = $this->storage->findCard($id);
+            $found = strpos($card->getNumber(), $string);
+            if ($found !== false) {
+                return $card;
+            }
+        }
+
+        return null;
     }
 
     private function findMissingSheets()
