@@ -51,6 +51,9 @@ class Commander
             case 'balance':
             case 'b':
                 return $this->analyzer->showBalances();
+            case 'refresh':
+            case 'r':
+                return $this->analyzer->refreshBalances();
             case 'break':
                 // this command will get returned from the reader if it has read
                 // a card track or a CVV. it's only here to help break out of the

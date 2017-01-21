@@ -70,6 +70,37 @@ class Analyzer
         }
     }
 
+    public function refreshBalances()
+    {
+        $cardIds = $this->storage->getCardIds();
+
+        echo "refreshing " . count($cardIds) . " cards\n";
+
+        $i = 1;
+
+        foreach ($cardIds as $id) {
+            echo "refreshing $i...";
+
+            $card = $this->storage->findCard($id);
+
+            if ($card) {
+
+                try {
+                    $checker = new BalanceChecker($card);
+                    $sheet = $checker->getBalanceSheet();
+                    if ($sheet->hasAllData()) {
+                        $this->storage->update($sheet);
+                    }
+                } catch (BalanceCheckerException $e) {
+                    echo $e->getMessage() . "\n";
+                    $card->showInfo();
+                }
+            }
+            echo "done\n";
+            $i++;
+        }
+    }
+
     private function findMissingSheets()
     {
         $cardIds = $this->storage->getCardIds();
