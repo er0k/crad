@@ -92,7 +92,7 @@ class EncryptedStorage
      * @return void
      * @throws EncryptedStorageException
      */
-    public function inititalize()
+    public function initialize()
     {
         $this->createTable(self::CARDS_TABLE);
         $this->createTable(self::SHEETS_TABLE);

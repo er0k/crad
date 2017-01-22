@@ -7,7 +7,7 @@ require 'vendor/autoload.php';
 
 $storage = new Crad\EncryptedStorage();
 try {
-    $storage->inititalize();
+    $storage->initialize();
 } catch (Crad\EncryptedStorageException $ese) {
     echo $ese->getMessage();
 }
