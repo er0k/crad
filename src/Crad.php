@@ -74,6 +74,8 @@ class Crad
             $this->card = new Card();
             $this->balanceSheet = new BalanceSheet();
         }
+        
+        $this->reader->setCard($this->card);
     }
 
     /**
@@ -84,6 +86,9 @@ class Crad
         return $this->card;
     }
 
+    /**
+     * @param Card $card
+     */
     public function setCard(Card $card)
     {
         $this->card = $card;
@@ -112,8 +117,6 @@ class Crad
      */
     private function parseInput()
     {
-        $this->reader->setCard($this->card);
-
         echo "crad$ ";
 
         // read from STDIN until ctrl+d or empty line
