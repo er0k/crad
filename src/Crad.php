@@ -196,11 +196,13 @@ class Crad
         }
 
         if ($this->card->hasAllData()) {
-            $this->checkBalance();
-            if ($this->balanceSheet->hasAllData()) {
-                $this->storage->insert($this->balanceSheet);
+            $balanceSheet = $this->checkBalance();
+            if ($balanceSheet->hasAllData()) {
+                $this->storage->insert($balanceSheet);
             }
         }
+        
+        $this->balanceSheet = balanceSheet;
 
         return $this;
     }
@@ -212,36 +214,40 @@ class Crad
     private function handleStoredBalanceSheet(BalanceSheet $storedBalanceSheet)
     {
         $storedBalanceSheet->showInfo();
-
-        $this->balanceSheet = $storedBalanceSheet;
-
+        
         echo "Check most current balance? y/n\n";
 
         if (CliPrompt::prompt() == 'y') {
-            $this->checkBalance();
+            $this->balanceSheet = $this->checkBalance();
         }
-
-        if (
-            $this->balanceSheet->hasAllData()
-            && $this->balanceSheet->hasChanged($storedBalanceSheet)
-        ) {
-            $this->storage->update($this->balanceSheet);
+        
+        if ($this->balanceSheet->hasAllData()) {
+            if ($this->balanceSheet->hasChanged($storedBalanceSheet)) {
+                $this->storage->update($this->balanceSheet);
+            }
+        } else {
+            $this->balanceSheet = $storedBalanceSheet;
         }
 
         return $this;
     }
 
+    /**
+     * @return BalanceSheet
+     */
     private function checkBalance()
     {
         echo 'checking balance...';
 
         $checker = new BalanceChecker($this->card);
 
-        $this->balanceSheet = $checker->getBalanceSheet();
+        $balanceSheet = $checker->getBalanceSheet();
 
-        $checker->compareBalanceToTransactionTotal($this->balanceSheet);
+        $checker->compareBalanceToTransactionTotal($balanceSheet);
 
-        $this->balanceSheet->showInfo();
+        $balanceSheet->showInfo();
+        
+        return $balanceSheet;
     }
 
     /**
