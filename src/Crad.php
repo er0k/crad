@@ -26,14 +26,8 @@ class Crad
     /** @var Card */
     private $card;
 
-    /** @var Card */
-    private $storedCard;
-
     /** @var BalanceSheet */
     private $balanceSheet;
-
-    /** @var BalanceSheet */
-    private $storedBalanceSheet;
 
     public function __construct()
     {
@@ -78,9 +72,7 @@ class Crad
     {
         if ($this->shouldGetNewCard() || $forceNew) {
             $this->card = new Card();
-            $this->storedCard = null;
             $this->balanceSheet = new BalanceSheet();
-            $this->storedBalanceSheet = null;
         }
     }
 
@@ -157,9 +149,11 @@ class Crad
     private function handleCard()
     {
         $this->card->checkDate();
+        
+        $storedCard = $this->findStoredCard();
 
-        if ($this->findStoredCard()) {
-            return $this->handleStoredCard();
+        if ($storedCard) {
+            return $this->handleStoredCard($storedCard);
         }
 
         if ($this->card->hasAllData()) {
@@ -170,16 +164,17 @@ class Crad
     }
 
     /**
+     * @param Card $storedCard
      * @return Crad
      */
-    private function handleStoredCard()
+    private function handleStoredCard(Card $storedCard)
     {
         if ($this->card->hasAllData()) {
-            if ($this->card->hasCardChanged($this->storedCard)) {
+            if ($this->card->hasCardChanged($storedCard)) {
                 $this->storage->update($this->card);
             }
         } else {
-            $this->card = $this->storedCard;
+            $this->card = $storedCard;
         }
 
         if ($this->card->hasAllData()) {
@@ -194,8 +189,10 @@ class Crad
      */
     private function handleBalanceSheet()
     {
-        if ($this->findStoredBalanceSheet()) {
-            return $this->handleStoredBalanceSheet();
+        $storedBalanceSheet = $this->findStoredBalanceSheet();
+        
+        if ($$storedBalanceSheet) {
+            return $this->handleStoredBalanceSheet($storedBalanceSheet);
         }
 
         if ($this->card->hasAllData()) {
@@ -209,13 +206,14 @@ class Crad
     }
 
     /**
+     * @param BalanceSheet $storedBalanceSheet
      * @return Crad
      */
-    private function handleStoredBalanceSheet()
+    private function handleStoredBalanceSheet(BalanceSheet $storedBalanceSheet)
     {
-        $this->storedBalanceSheet->showInfo();
+        $storedBalanceSheet->showInfo();
 
-        $this->balanceSheet = $this->storedBalanceSheet;
+        $this->balanceSheet = $storedBalanceSheet;
 
         echo "Check most current balance? y/n\n";
 
@@ -225,7 +223,7 @@ class Crad
 
         if (
             $this->balanceSheet->hasAllData()
-            && $this->balanceSheet->hasChanged($this->storedBalanceSheet)
+            && $this->balanceSheet->hasChanged($storedBalanceSheet)
         ) {
             $this->storage->update($this->balanceSheet);
         }
@@ -251,11 +249,11 @@ class Crad
      */
     private function findStoredCard()
     {
-        if (!$this->storedCard) {
-            $this->storedCard = $this->storage->findCard($this->card->getHash());
-        }
-
-        return $this->storedCard;
+        $hash = $this->card->getHash();
+        
+        $storedCard = $this->storage->findCard($hash);
+        
+        return $storedCard;
     }
 
     /**
@@ -263,11 +261,11 @@ class Crad
      */
     private function findStoredBalanceSheet()
     {
-        if (!$this->storedBalanceSheet) {
-            $this->storedBalanceSheet = $this->storage->findBalanceSheet($this->card->getHash());
-        }
-
-        return $this->storedBalanceSheet;
+        $hash = $this->card->getHash();
+        
+        $storedBalanceSheet = $this->storage->findBalanceSheet($hash);
+        
+        return $storedBalanceSheet;
     }
 
     /**
