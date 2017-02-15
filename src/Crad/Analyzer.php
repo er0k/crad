@@ -107,8 +107,9 @@ class Analyzer
                     $this->storage->update($sheet);
                 }
             } catch (BalanceCheckerException $e) {
+                echo "Couldn't refresh this one:\n";
                 $card->showInfo();
-                throw new AnalyzerException("Couldn't refresh balance", 420, $e);
+                #throw new AnalyzerException("Couldn't refresh balance", 420, $e);
             }
             echo "done\n";
         }
