@@ -74,7 +74,7 @@ class Crad
             $this->card = new Card();
             $this->balanceSheet = new BalanceSheet();
         }
-        
+
         $this->reader->setCard($this->card);
     }
 
@@ -152,7 +152,7 @@ class Crad
     private function handleCard()
     {
         $this->card->checkDate();
-        
+
         $storedCard = $this->findStoredCard();
 
         if ($storedCard) {
@@ -193,8 +193,8 @@ class Crad
     private function handleBalanceSheet()
     {
         $storedBalanceSheet = $this->findStoredBalanceSheet();
-        
-        if ($$storedBalanceSheet) {
+
+        if ($storedBalanceSheet) {
             return $this->handleStoredBalanceSheet($storedBalanceSheet);
         }
 
@@ -203,9 +203,8 @@ class Crad
             if ($balanceSheet->hasAllData()) {
                 $this->storage->insert($balanceSheet);
             }
+            $this->balanceSheet = $balanceSheet;
         }
-        
-        $this->balanceSheet = balanceSheet;
 
         return $this;
     }
@@ -217,13 +216,13 @@ class Crad
     private function handleStoredBalanceSheet(BalanceSheet $storedBalanceSheet)
     {
         $storedBalanceSheet->showInfo();
-        
+
         echo "Check most current balance? y/n\n";
 
         if (CliPrompt::prompt() == 'y') {
             $this->balanceSheet = $this->checkBalance();
         }
-        
+
         if ($this->balanceSheet->hasAllData()) {
             if ($this->balanceSheet->hasChanged($storedBalanceSheet)) {
                 $this->storage->update($this->balanceSheet);
@@ -249,7 +248,7 @@ class Crad
         $checker->compareBalanceToTransactionTotal($balanceSheet);
 
         $balanceSheet->showInfo();
-        
+
         return $balanceSheet;
     }
 
@@ -259,9 +258,9 @@ class Crad
     private function findStoredCard()
     {
         $hash = $this->card->getHash();
-        
+
         $storedCard = $this->storage->findCard($hash);
-        
+
         return $storedCard;
     }
 
@@ -271,9 +270,9 @@ class Crad
     private function findStoredBalanceSheet()
     {
         $hash = $this->card->getHash();
-        
+
         $storedBalanceSheet = $this->storage->findBalanceSheet($hash);
-        
+
         return $storedBalanceSheet;
     }
 
