@@ -2,17 +2,12 @@
 
 use Crad\Analyzer;
 use Crad\BalanceChecker;
-use Crad\BalanceCheckerException;
 use Crad\BalanceSheet;
-use Crad\BalanceSheetException;
 use Crad\Card;
-use Crad\CardException;
 use Crad\Commander;
-use Crad\Config;
 use Crad\EncryptedStorage;
-use Crad\EncryptedStorageException;
+use Crad\Exception;
 use Crad\Reader;
-use Crad\ReaderException;
 use Seld\CliPrompt\CliPrompt;
 
 class Crad
@@ -38,35 +33,19 @@ class Crad
 
     public function run()
     {
-        $this->initialize();
-
         try {
-            $this->parseInput();
-        } catch (ReaderException $re) {
-            $this->handleError($re);
-        }
-
-        try {
-            $this->handleCard();
-        } catch (CardException $ce) {
-            $this->handleError($ce);
-        } catch (EncryptedStorageException $ese) {
-            $this->handleError($ese);
-        }
-
-        try {
-            $this->handleBalanceSheet();
-        } catch (BalanceSheetException $bse) {
-            $this->handleError($bse);
-        } catch (EncryptedStorageException $ese) {
-            $this->handleError($ese);
-        } catch (BalanceCheckerException $bce) {
-            $this->handleError($bce);
-        }
+            $this->initialize()
+                ->parseInput()
+                ->handleCard()
+                ->handleBalanceSheet();
+            } catch (Exception $e) {
+                $this->handleError($e);
+            }
     }
 
     /**
-     * @param  bool $forceNew
+     * @param   bool $forceNew
+     * @return  Crad
      */
     public function initialize($forceNew = false)
     {
@@ -76,6 +55,8 @@ class Crad
         }
 
         $this->reader->setCard($this->card);
+
+        return $this;
     }
 
     /**
@@ -174,14 +155,11 @@ class Crad
     {
         if ($this->card->hasAllData()) {
             if ($this->card->hasCardChanged($storedCard)) {
+                $storedCard->showInfo();
                 $this->storage->update($this->card);
             }
         } else {
             $this->card = $storedCard;
-        }
-
-        if ($this->card->hasAllData()) {
-            $this->card->showInfo();
         }
 
         return $this;
@@ -281,9 +259,7 @@ class Crad
      */
     private function handleError(Exception $error)
     {
-        echo $error->getMessage();
-        echo "\n";
-        echo $error->getTraceAsString();
-        echo "\n";
+        echo $error;
+        echo "\n\n";
     }
 }

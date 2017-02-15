@@ -25,52 +25,62 @@ class Commander
 
     /**
      * @param  string $cmd
-     * @return void
+     * @return Crad
      */
     public function execute($cmd)
     {
          switch ($cmd) {
             case 'help':
             case 'h':
-                return $this->showHelp();
+                $this->showHelp();
+                break;
             case 'quit':
             case 'q':
                 die("Bye\n");
             case 'total':
             case 't':
-                return $this->calculateTotal();
+                $this->calculateTotal();
+                break;
             case 'new':
             case 'n':
-                return $this->crad->initialize(true);
+                $this->crad->initialize(true);
+                break;
             case 'count':
             case 'c':
-                return $this->analyzer->countCardsAndSheets();
+                $this->analyzer->countCardsAndSheets();
+                break;
             case 'show':
             case 's':
                 $this->crad->getCard()->showInfo();
                 $this->crad->getBalanceSheet()->showInfo();
-                return;
+                break;;
             case 'balance':
             case 'b':
-                return $this->analyzer->showBalances();
+                $this->analyzer->showBalances();
+                break;
             case 'refresh':
             case 'r':
-                return $this->analyzer->refreshBalances();
+                $this->analyzer->refreshBalances();
+                break;
             case 'find':
             case 'f':
-                return $this->find();
+                $this->find();
+                break;
             case 'l':
-                return system('clear');
+                system('clear');
+                break;
             case 'break':
                 // this command will get returned from the reader if it has read
                 // a card track or a CVV. it's only here to help break out of the
                 // main loop of parsing input, and allow card data to get pushed
                 // into the program without having to hit Enter each time
-                return;
+                break;;
             default:
                 echo "$cmd command not yet implemented\n";
-                return;
+                break;;
         }
+
+        return $this->crad;
     }
 
     private function showHelp()
