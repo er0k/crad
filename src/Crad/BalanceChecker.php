@@ -35,9 +35,11 @@ class BalanceChecker
             case preg_match('|^43[0-9]{11}(?:[0-9]{3})?$|', $number) === 1:
                 return new BalanceChecker\GiftCardMall($card);
             case preg_match('|^4[0-9]{12}(?:[0-9]{3})?$|', $number) === 1:
+            case preg_match('|^5[0-9]{12}(?:[0-9]{3})?$|', $number) === 1:
                 return new BalanceChecker\VanillaVisa($card);
             case preg_match('|^3[47][0-9]{13}$|', $number) == 1:
                 return new BalanceChecker\AmericanExpress($card);
+
             default:
                 throw new BalanceCheckerException("Card type not implemented");
         }
