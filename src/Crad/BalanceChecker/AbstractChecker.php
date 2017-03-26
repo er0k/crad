@@ -97,7 +97,7 @@ abstract class AbstractChecker
     {
         $defaultUa = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.85 Safari/537.36';
 
-        if ($response = file_get_contents('http://api.useragent.io')) {
+        if ($response = @file_get_contents('http://api.useragent.io')) {
             $data = json_decode($response);
             $ua = $data->ua;
         } else {
