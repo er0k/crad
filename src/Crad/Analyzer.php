@@ -54,7 +54,9 @@ class Analyzer
     {
         $cardIds = $this->storage->getCardIds();
 
-        foreach ($cardIds as $id) {
+        $cards = array();
+
+        foreach ($cardIds as $i => $id) {
             $card = $this->storage->findCard($id);
 
             if (!$card) {
@@ -71,10 +73,28 @@ class Analyzer
                 continue;
             }
 
-            $card->showInfo();
-            $sheet->showInfo();
+            $cards[] = array(
+                'card' => $card,
+                'sheet' => $sheet,
+            );
 
-            echo "--------------------\n";
+            echo $i;
+        }
+
+        usort($cards, function($a, $b) {
+            $bal1 = $a['sheet']->getBalance();
+            $bal2 = $b['sheet']->getBalance();
+            if ($bal1 == $bal2) {
+                return 0;
+            }
+
+            return ($bal1 < $bal2) ? -1 : 1;
+        });
+
+        foreach ($cards as $card) {
+            $card['card']->showInfo();
+            $card['sheet']->showInfo();
+            echo "----------------------------\n";
         }
     }
 
