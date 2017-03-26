@@ -24,6 +24,9 @@ class Crad
     /** @var BalanceSheet */
     private $balanceSheet;
 
+    /** @var Commander */
+    private $commander;
+
     public function __construct()
     {
         $this->storage = new EncryptedStorage();
